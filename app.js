@@ -1,7 +1,7 @@
-// app.js (ESM)
+// app.js (ESM) — limpio para GitHub Pages (sin duplicados)
 
 // =========================
-// 0) Firebase imports
+// 0) Firebase imports (ESM desde gstatic)
 // =========================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
@@ -23,17 +23,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 // =========================
-// 1) Tu Firebase config
+// 1) Firebase config (TUYO)
 // =========================
-// Crea un proyecto en Firebase Console -> Add app (Web) -> copia el config aquí.
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyA3KERRbb2kWbAWOGCg2Pg_P2-zbIeIECU",
   authDomain: "board-43bf1.firebaseapp.com",
@@ -44,17 +35,16 @@ const firebaseConfig = {
   measurementId: "G-4ELQ6D88G1"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
 // =========================
-// 2) Init
+// 2) Init Firebase
 // =========================
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// =========================
+// 3) DOM refs
+// =========================
 const board = document.getElementById("board");
 const boardHint = document.getElementById("boardHint");
 
@@ -76,12 +66,15 @@ const btnAddImage = document.getElementById("btnAddImage");
 const btnClear = document.getElementById("btnClear");
 const toast = document.getElementById("toast");
 
+// =========================
+// 4) State
+// =========================
 let currentUser = null;
 let selectedEl = null;
 let zCounter = 10;
 
 // =========================
-// 3) Helpers UI
+// 5) Helpers UI
 // =========================
 function showToast(msg) {
   toast.textContent = msg;
@@ -123,7 +116,7 @@ function bringToFront(el) {
 }
 
 // =========================
-// 4) Firestore paths
+// 6) Firestore paths
 // =========================
 // users/{uid}/items/{itemId}
 function itemsCol(uid) {
@@ -134,7 +127,7 @@ function itemDoc(uid, itemId) {
 }
 
 // =========================
-// 5) Create DOM elements
+// 7) Create DOM elements
 // =========================
 function createNoteElement(item) {
   const el = document.createElement("div");
@@ -156,14 +149,12 @@ function createNoteElement(item) {
   el.appendChild(pin);
   el.appendChild(content);
 
-  // doble click para editar texto
   el.addEventListener("dblclick", async () => {
     if (!requireAuth()) return;
     const next = prompt("Editar nota:", content.textContent);
     if (next === null) return;
     content.textContent = next;
 
-    // persist
     item.text = next;
     await setDoc(itemDoc(currentUser.uid, item.id), item, { merge: true });
   });
@@ -197,7 +188,7 @@ function createPhotoElement(item) {
 }
 
 // =========================
-// 6) Drag & drop (mouse)
+// 8) Drag & drop (mouse)
 // =========================
 function attachDragHandlers(el) {
   let dragging = false;
@@ -205,7 +196,7 @@ function attachDragHandlers(el) {
   let offsetY = 0;
 
   el.addEventListener("mousedown", (e) => {
-    if (!currentUser) return; // bloquea si no hay login
+    if (!currentUser) return;
     dragging = true;
 
     setSelected(el);
@@ -215,11 +206,10 @@ function attachDragHandlers(el) {
     offsetX = e.clientX - r.left;
     offsetY = e.clientY - r.top;
 
-    el.setPointerCapture?.(e.pointerId);
     e.preventDefault();
   });
 
-  window.addEventListener("mousemove", async (e) => {
+  window.addEventListener("mousemove", (e) => {
     if (!dragging) return;
 
     const br = boardRect();
@@ -237,10 +227,8 @@ function attachDragHandlers(el) {
     if (!dragging) return;
     dragging = false;
 
-    // persist al soltar
     if (!currentUser) return;
     const id = el.dataset.id;
-    const type = el.dataset.type;
 
     const x = parseFloat(el.style.left) || 0;
     const y = parseFloat(el.style.top) || 0;
@@ -249,8 +237,7 @@ function attachDragHandlers(el) {
     await setDoc(itemDoc(currentUser.uid, id), { x, y, z }, { merge: true });
   });
 
-  // click = traer al frente
-  el.addEventListener("click", (e) => {
+  el.addEventListener("click", () => {
     if (!currentUser) return;
     setSelected(el);
     bringToFront(el);
@@ -258,7 +245,7 @@ function attachDragHandlers(el) {
 }
 
 // =========================
-// 7) CRUD items
+// 9) CRUD items
 // =========================
 function genId() {
   return crypto.randomUUID();
@@ -300,10 +287,10 @@ function fileToDataUrl(file) {
 
 async function addImage() {
   if (!requireAuth()) return;
+
   const file = imgFile.files?.[0];
   if (!file) return showToast("Selecciona una imagen.");
 
-  // Limitación básica para evitar monstruos gigantes
   if (file.size > 2_000_000) {
     return showToast("Imagen muy grande (>2MB). Usa una más pequeña para esta demo.");
   }
@@ -342,10 +329,9 @@ async function loadBoard() {
 
   const snap = await getDocs(itemsCol(currentUser.uid));
   const items = [];
-  snap.forEach(d => items.push(d.data()));
+  snap.forEach((d) => items.push(d.data()));
 
-  // orden por z para pintar bien
-  items.sort((a,b) => (a.z||0) - (b.z||0));
+  items.sort((a, b) => (a.z || 0) - (b.z || 0));
 
   for (const item of items) {
     zCounter = Math.max(zCounter, item.z || 10);
@@ -374,7 +360,7 @@ async function clearAll() {
 
   const snap = await getDocs(itemsCol(currentUser.uid));
   const batch = writeBatch(db);
-  snap.forEach(d => batch.delete(d.ref));
+  snap.forEach((d) => batch.delete(d.ref));
   await batch.commit();
 
   await loadBoard();
@@ -382,7 +368,7 @@ async function clearAll() {
 }
 
 // =========================
-// 8) Auth
+// 10) Auth
 // =========================
 btnLoginGoogle.addEventListener("click", async () => {
   try {
@@ -390,17 +376,11 @@ btnLoginGoogle.addEventListener("click", async () => {
     await signInWithPopup(auth, provider);
   } catch (e) {
     console.error("AUTH ERROR:", e);
-
-    // Mostrar el código real de Firebase (esto es lo que necesitamos)
     const code = e?.code || "";
     const msg = e?.message || "";
     showToast(code ? `Error: ${code}` : `Error: ${msg}`);
-
-    // opcional: también un alert para que sea imposible ignorarlo
-    // alert(code ? `Firebase Auth: ${code}` : msg);
   }
 });
-
 
 btnLogout.addEventListener("click", async () => {
   try {
@@ -438,7 +418,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // =========================
-// 9) Events UI
+// 11) UI events
 // =========================
 btnAddNote.addEventListener("click", addNote);
 btnAddImage.addEventListener("click", addImage);
@@ -448,7 +428,6 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "Delete") deleteSelected();
 });
 
-// Click vacío del tablero = deseleccionar
 board.addEventListener("mousedown", (e) => {
   if (e.target === board) setSelected(null);
 });
