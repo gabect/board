@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Private Bulletin Board</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>Private Board</strong>
+      <span class="muted">— tu corcho personal</span>
+    </div>
+
+    <div class="auth">
+      <div id="userBadge" class="userBadge hidden">
+        <img id="userPhoto" alt="" />
+        <div class="userMeta">
+          <div id="userName" class="userName"></div>
+          <div id="userEmail" class="muted small"></div>
+        </div>
+      </div>
+
+      <button id="btnLoginGoogle" class="btn primary">Entrar con Google</button>
+      <button id="btnLogout" class="btn hidden">Salir</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel">
+      <h2>Herramientas</h2>
+
+      <div class="card">
+        <h3>Nota</h3>
+        <label class="small muted">Texto</label>
+        <textarea id="noteText" rows="4" placeholder="Escribe una nota..."></textarea>
+
+        <div class="row">
+          <label class="small muted">Color</label>
+          <select id="noteColor">
+            <option value="yellow">Amarillo</option>
+            <option value="pink">Rosado</option>
+            <option value="blue">Azul</option>
+            <option value="green">Verde</option>
+            <option value="paper">Papel</option>
+          </select>
+
+          <button id="btnAddNote" class="btn">Añadir</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Imagen (tachuelo)</h3>
+        <input id="imgFile" type="file" accept="image/*" />
+        <p class="muted small">
+          Nota: esta demo guarda la imagen como <em>dataURL</em> en Firestore (sirve para prototipos).
+          Para producción, sube a Firebase Storage.
+        </p>
+        <button id="btnAddImage" class="btn">Poner imagen</button>
+      </div>
+
+      <div class="card danger">
+        <h3>Tablero</h3>
+        <button id="btnClear" class="btn danger">Borrar todo</button>
+        <p class="muted small">Esto elimina tus items en la nube. No hay “undo”.</p>
+      </div>
+
+      <div class="card info">
+        <h3>Tips</h3>
+        <ul class="small">
+          <li>Arrastra con el mouse para mover.</li>
+          <li>Click en un elemento = lo trae al frente.</li>
+          <li>Doble click en una nota = editar.</li>
+          <li>Tecla <kbd>Delete</kbd> = borrar seleccionado.</li>
+        </ul>
+      </div>
+
+      <div class="card small muted">
+        <strong>Privacidad:</strong> solo usuarios autenticados ven su propio tablero (por UID).
+      </div>
+    </aside>
+
+    <section class="boardWrap">
+      <div id="board" class="board">
+        <div class="boardHint" id="boardHint">
+          Inicia sesión para usar tu tablero privado.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
