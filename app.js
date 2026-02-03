@@ -376,10 +376,18 @@ btnLoginGoogle.addEventListener("click", async () => {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
   } catch (e) {
-    console.error(e);
-    showToast("No se pudo iniciar sesión.");
+    console.error("AUTH ERROR:", e);
+
+    // Mostrar el código real de Firebase (esto es lo que necesitamos)
+    const code = e?.code || "";
+    const msg = e?.message || "";
+    showToast(code ? `Error: ${code}` : `Error: ${msg}`);
+
+    // opcional: también un alert para que sea imposible ignorarlo
+    // alert(code ? `Firebase Auth: ${code}` : msg);
   }
 });
+
 
 btnLogout.addEventListener("click", async () => {
   try {
