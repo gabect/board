@@ -434,7 +434,10 @@ function renderTabs() {
     const t = document.createElement("div");
     t.className = "tab" + (p.id === activePageId ? " active" : "");
     t.textContent = p.title || "Página";
-    t.addEventListener("click", () => setActivePage(p.id));
+t.addEventListener("click", async () => {
+  if (currentUser && activePageId) await saveActivePageNow();
+  setActivePage(p.id);
+});
     tabs.appendChild(t);
   }
 }
