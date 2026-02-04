@@ -539,7 +539,7 @@ function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     saveActivePageNow().catch(console.error);
-  }, 600);
+  }, 60);
 }
 
 // =========================
