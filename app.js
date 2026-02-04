@@ -434,9 +434,11 @@ function renderTabs() {
     t.className = "tab" + (p.id === activePageId ? " active" : "");
     t.textContent = p.title || "Página";
 t.addEventListener("click", async () => {
+  clearTimeout(saveTimer);
   if (currentUser && activePageId) await saveActivePageNow();
   setActivePage(p.id);
 });
+
     tabs.appendChild(t);
   }
 }
