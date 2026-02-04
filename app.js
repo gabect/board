@@ -400,9 +400,8 @@ async function openNotebook() {
   notebookOverlay.setAttribute("aria-hidden", "false");
 
   // Asegura que haya páginas cargadas y una activa
-  if (!activePageId) {
-    try {
-      await loadNotebook();
+ await loadNotebook();
+
     } catch (e) {
       console.error("LOAD NOTEBOOK ERROR:", e);
       showToast(`Notebook: ${e?.code || e?.message || e}`);
