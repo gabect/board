@@ -87,12 +87,12 @@ let zCounter = 10;
 let notebookPages = []; // [{id,title,content,createdAt,updatedAt}]
 let activePageId = null;
 let saveTimer = null;
+let notebookLoadedOnce = false;
 
 // =========================
 // 5) Helpers UI
 // =========================
 function showToast(msg) {
-  if (!toast) return;
   toast.textContent = msg;
   toast.classList.remove("hidden");
   clearTimeout(showToast._t);
@@ -138,17 +138,20 @@ function genId() {
 // =========================
 // 6) Firestore paths
 // =========================
+// users/{uid}/items/{itemId}
 function itemsCol(uid) {
   return collection(db, "users", uid, "items");
 }
 function itemDoc(uid, itemId) {
   return doc(db, "users", uid, "items", itemId);
 }
+
+// ✅ Notebook: users/{uid}/notebookPages/{pageId}
 function pagesCol(uid) {
-  return collection(db, "users", uid, "notebook", "pages");
+  return collection(db, "users", uid, "notebookPages");
 }
 function pageDoc(uid, pageId) {
-  return doc(db, "users", uid, "notebook", "pages", pageId);
+  return doc(db, "users", uid, "notebookPages", pageId);
 }
 
 // =========================
@@ -179,7 +182,6 @@ function createNoteElement(item) {
     const next = prompt("Editar nota:", content.textContent);
     if (next === null) return;
     content.textContent = next;
-
     await setDoc(itemDoc(currentUser.uid, item.id), { text: next }, { merge: true });
   });
 
@@ -252,8 +254,8 @@ function attachDragHandlers(el) {
     dragging = false;
 
     if (!currentUser) return;
-
     const id = el.dataset.id;
+
     const x = parseFloat(el.style.left) || 0;
     const y = parseFloat(el.style.top) || 0;
     const z = parseInt(el.style.zIndex || "10", 10);
@@ -358,8 +360,6 @@ async function loadBoard() {
     if (item.type === "note") board.appendChild(createNoteElement(item));
     if (item.type === "photo") board.appendChild(createPhotoElement(item));
   }
-
-  showToast("Tablero cargado.");
 }
 
 async function deleteSelected() {
@@ -390,38 +390,6 @@ async function clearAll() {
 // =========================
 // 9.5) Notebook (Modal + Tabs)
 // =========================
-async function openNotebook() {
-  if (!requireAuth()) return;
-
-  notebookOverlay.classList.remove("hidden");
-  notebookOverlay.setAttribute("aria-hidden", "false");
-
-  try {
-    // refresca desde Firestore cada vez que abres (evita perder texto si cambió)
-    await loadNotebook();
-  } catch (e) {
-    console.error("LOAD NOTEBOOK ERROR:", e);
-    showToast(`Notebook: ${e?.code || e?.message || e}`);
-  }
-
-  pageEditor.focus();
-}
-
-async function closeNotebook() {
-  try {
-    clearTimeout(saveTimer);
-    if (currentUser && activePageId) {
-      await saveActivePageNow();
-    }
-  } catch (e) {
-    console.error("CLOSE/SAVE NOTEBOOK ERROR:", e);
-    showToast(`Save: ${e?.code || e?.message || e}`);
-  }
-
-  notebookOverlay.classList.add("hidden");
-  notebookOverlay.setAttribute("aria-hidden", "true");
-}
-
 function renderTabs() {
   tabs.innerHTML = "";
   for (const p of notebookPages) {
@@ -430,9 +398,13 @@ function renderTabs() {
     t.textContent = p.title || "Página";
 
     t.addEventListener("click", async () => {
-      // guarda lo que estabas escribiendo ANTES de cambiar
+      if (!currentUser) return;
+      if (p.id === activePageId) return;
+
+      // guarda lo actual antes de cambiar
       clearTimeout(saveTimer);
-      if (currentUser && activePageId) await saveActivePageNow();
+      if (activePageId) await saveActivePageNow();
+
       setActivePage(p.id);
     });
 
@@ -461,37 +433,31 @@ async function loadNotebook() {
 
   if (notebookPages.length === 0) {
     await createNewPage();
+    notebookLoadedOnce = true;
     return;
   }
 
   setActivePage(notebookPages[0].id);
+  notebookLoadedOnce = true;
 }
 
 async function createNewPage() {
   if (!requireAuth()) return;
 
-  try {
-    const id = genId();
-    const title = `Página ${notebookPages.length + 1}`;
-    const page = {
-      id,
-      title,
-      content: "",
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    };
+  const id = genId();
+  const title = `Página ${notebookPages.length + 1}`;
+  const page = {
+    id,
+    title,
+    content: "",
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
 
-    await setDoc(pageDoc(currentUser.uid, id), page);
-
-    // agrega localmente y activa
-    notebookPages.unshift(page);
-    setActivePage(id);
-
-    showToast("Nueva página creada.");
-  } catch (e) {
-    console.error("NEW PAGE ERROR:", e);
-    showToast(`NewPage: ${e?.code || e?.message || e}`);
-  }
+  await setDoc(pageDoc(currentUser.uid, id), page);
+  notebookPages.unshift(page);
+  setActivePage(id);
+  showToast("Nueva página creada.");
 }
 
 async function deleteActivePage() {
@@ -501,29 +467,21 @@ async function deleteActivePage() {
   const ok = confirm("¿Eliminar esta página? No hay undo.");
   if (!ok) return;
 
-  try {
-    clearTimeout(saveTimer);
+  await deleteDoc(pageDoc(currentUser.uid, activePageId));
+  notebookPages = notebookPages.filter(p => p.id !== activePageId);
 
-    await deleteDoc(pageDoc(currentUser.uid, activePageId));
-    notebookPages = notebookPages.filter(p => p.id !== activePageId);
-
-    if (notebookPages.length === 0) {
-      activePageId = null;
-      pageEditor.value = "";
-      await createNewPage();
-      return;
-    }
-
-    setActivePage(notebookPages[0].id);
-    showToast("Página eliminada.");
-  } catch (e) {
-    console.error("DELETE PAGE ERROR:", e);
-    showToast(`Delete: ${e?.code || e?.message || e}`);
+  if (notebookPages.length === 0) {
+    await createNewPage();
+    return;
   }
+
+  setActivePage(notebookPages[0].id);
+  showToast("Página eliminada.");
 }
 
 async function saveActivePageNow() {
-  if (!requireAuth()) return;
+  if (!currentUser || !activePageId) return;
+
   const page = notebookPages.find(p => p.id === activePageId);
   if (!page) return;
 
@@ -539,7 +497,37 @@ function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     saveActivePageNow().catch(console.error);
-  }, 60);
+  }, 600);
+}
+
+async function openNotebook() {
+  if (!requireAuth()) return;
+
+  notebookOverlay.classList.remove("hidden");
+  notebookOverlay.setAttribute("aria-hidden", "false");
+
+  try {
+    // recarga siempre para evitar “estado fantasma”
+    await loadNotebook();
+  } catch (e) {
+    console.error("LOAD NOTEBOOK ERROR:", e);
+    showToast(`Notebook: ${e?.code || e?.message || e}`);
+  }
+
+  pageEditor.focus();
+}
+
+async function closeNotebook() {
+  try {
+    clearTimeout(saveTimer);
+    await saveActivePageNow();
+  } catch (e) {
+    console.error("CLOSE/SAVE NOTEBOOK ERROR:", e);
+    showToast(`Save: ${e?.code || e?.message || e}`);
+  }
+
+  notebookOverlay.classList.add("hidden");
+  notebookOverlay.setAttribute("aria-hidden", "true");
 }
 
 // =========================
@@ -578,7 +566,11 @@ onAuthStateChanged(auth, async (user) => {
     userEmail.textContent = currentUser.email || "";
 
     await loadBoard();
-    await loadNotebook();
+
+    // precarga libreta (opcional pero útil)
+    try { await loadNotebook(); } catch (e) { console.error(e); }
+
+    showToast("Sesión iniciada ✅");
   } else {
     btnLoginGoogle.classList.remove("hidden");
     btnLogout.classList.add("hidden");
@@ -592,7 +584,7 @@ onAuthStateChanged(auth, async (user) => {
 
     notebookPages = [];
     activePageId = null;
-    clearTimeout(saveTimer);
+    notebookLoadedOnce = false;
     if (tabs) tabs.innerHTML = "";
     if (pageEditor) pageEditor.value = "";
     if (saveStatus) saveStatus.textContent = "—";
@@ -628,17 +620,13 @@ notebookOverlay.addEventListener("mousedown", (e) => {
 });
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && notebookOverlay && !notebookOverlay.classList.contains("hidden")) {
+  if (e.key === "Escape" && !notebookOverlay.classList.contains("hidden")) {
     closeNotebook();
   }
 });
 
-pageEditor.addEventListener("input", async () => {
-  if (!requireAuth()) return;
-
-  if (!activePageId) {
-    await createNewPage();
-  }
-
+pageEditor.addEventListener("input", () => {
+  if (!currentUser) return;
+  if (!activePageId) return; // si no hay página activa, no auto-crees aquí
   scheduleSave();
 });
