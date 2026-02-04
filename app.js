@@ -482,15 +482,7 @@ async function createNewPage() {
       updatedAt: Date.now()
     };
 
-    await setDoc(pageDoc(currentUser.uid, id), page);
-    notebookPages.unshift(page);
-    setActivePage(id);
-    renderTabs();
-    showToast("Nueva página creada.");
-  } catch (e) {
-    console.error("NEW PAGE ERROR:", e);
-    showToast(`NewPage: ${e?.code || e?.message || e}`);
-  }
+   
 }
 
 
