@@ -77,6 +77,12 @@
         </ul>
       </div>
 
+      <div class="card">
+  <h3>Libreta</h3>
+  <button id="btnNotebook" class="btn">Abrir libreta</button>
+</div>
+
+
       <div class="card small muted">
         <strong>Privacidad:</strong> solo usuarios autenticados ven su propio tablero (por UID).
       </div>
@@ -93,6 +99,36 @@
 
   <div id="toast" class="toast hidden"></div>
 
-<script type="module" src="app.js?v=3"></script>
+<!-- Notebook Modal -->
+<div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
+  <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
+    <div class="modalTop">
+      <div class="modalTitle">
+        <strong>Libreta</strong>
+        <span class="muted small">— páginas privadas</span>
+      </div>
+      <div class="modalActions">
+        <button id="btnNewPage" class="btn">+ Página</button>
+        <button id="btnCloseNotebook" class="btn">Cerrar</button>
+      </div>
+    </div>
+
+    <div class="tabsBar">
+      <div id="tabs" class="tabs"></div>
+    </div>
+
+    <div class="pageArea">
+      <textarea id="pageEditor" class="pageEditor" placeholder="Escribe aquí..."></textarea>
+    </div>
+
+    <div class="modalBottom">
+      <span id="saveStatus" class="muted small">—</span>
+      <button id="btnDeletePage" class="btn danger">Eliminar página</button>
+    </div>
+  </div>
+</div>
+
+  
+<script type="module" src="app.js?v=4"></script>
 </body>
 </html>
