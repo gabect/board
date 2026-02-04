@@ -393,17 +393,40 @@ async function clearAll() {
 // =========================
 // 9.5) Notebook (Modal + Tabs)
 // =========================
-function openNotebook() {
+async function openNotebook() {
   if (!requireAuth()) return;
+
   notebookOverlay.classList.remove("hidden");
   notebookOverlay.setAttribute("aria-hidden", "false");
+
+  // Asegura que haya páginas cargadas y una activa
+  if (!activePageId) {
+    try {
+      await loadNotebook();
+    } catch (e) {
+      console.error("LOAD NOTEBOOK ERROR:", e);
+      showToast(`Notebook: ${e?.code || e?.message || e}`);
+    }
+  }
+
   pageEditor.focus();
 }
 
-function closeNotebook() {
+async function closeNotebook() {
+  try {
+    // Guarda antes de cerrar (por si no alcanzó el autosave)
+    if (currentUser && activePageId) {
+      await saveActivePageNow();
+    }
+  } catch (e) {
+    console.error("CLOSE/SAVE NOTEBOOK ERROR:", e);
+    showToast(`Save: ${e?.code || e?.message || e}`);
+  }
+
   notebookOverlay.classList.add("hidden");
   notebookOverlay.setAttribute("aria-hidden", "true");
 }
+
 
 function renderTabs() {
   tabs.innerHTML = "";
@@ -448,15 +471,28 @@ async function loadNotebook() {
 async function createNewPage() {
   if (!requireAuth()) return;
 
-  const id = crypto.randomUUID();
-  const title = `Página ${notebookPages.length + 1}`;
-  const page = {
-    id,
-    title,
-    content: "",
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  };
+  try {
+    const id = crypto.randomUUID();
+    const title = `Página ${notebookPages.length + 1}`;
+    const page = {
+      id,
+      title,
+      content: "",
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+
+    await setDoc(pageDoc(currentUser.uid, id), page);
+    notebookPages.unshift(page);
+    setActivePage(id);
+    renderTabs();
+    showToast("Nueva página creada.");
+  } catch (e) {
+    console.error("NEW PAGE ERROR:", e);
+    showToast(`NewPage: ${e?.code || e?.message || e}`);
+  }
+}
+
 
   await setDoc(pageDoc(currentUser.uid, id), page);
   notebookPages.unshift(page);
@@ -598,8 +634,13 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-pageEditor.addEventListener("input", () => {
-  if (!activePageId) return;
+pageEditor.addEventListener("input", async () => {
+  if (!requireAuth()) return;
+
+  if (!activePageId) {
+    await createNewPage();
+  }
   scheduleSave();
 });
+
 
