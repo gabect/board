@@ -353,3 +353,87 @@ kbd{
   font-size: 1rem;
 }
 
+/* =========================
+   NOTEBOOK FIXES (override)
+   ========================= */
+
+/* 1) Evita que los .row globales destruyan layouts especiales dentro del modal */
+#notebookModal .row > * {
+  flex: 0 0 auto;
+}
+
+/* 2) Barra del selector de libreta: que se entienda y haga wrap bien */
+#notebookModal .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* El select debe crecer, pero no aplastar todo */
+#notebookSelect{
+  flex: 1 1 260px;
+  min-width: 240px;
+  max-width: 520px;
+}
+
+/* Botones del row de libretas */
+#btnNewNotebook,
+#btnRenameNotebook,
+#btnDeleteNotebook{
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 3) ModalTop: título y acciones mejor alineados */
+.modalTop{
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.modalTitle{
+  display:flex;
+  flex-direction: column; /* en vez de baseline horizontal */
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 220px;
+}
+
+/* 4) iOS/Chrome: arregla "textarea no aparece" en flex */
+.modal{
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pageArea{
+  flex: 1 1 auto;
+  min-height: 0;   /* CLAVE para iOS flex */
+  overflow: hidden;
+}
+
+.pageEditor{
+  height: 100%;
+  min-height: 240px; /* fallback visual */
+}
+
+/* 5) Tabs: que no se oculten ni se rompan raro */
+.tabsBar{
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 6) Responsive: en pantallas pequeñas, botones a full-width si hace falta */
+@media (max-width: 560px){
+  #notebookSelect{ flex: 1 1 100%; max-width: none; }
+  #btnNewNotebook,
+  #btnRenameNotebook,
+  #btnDeleteNotebook{ width: 100%; }
+}
+
+#notebookSelect{
+  appearance: none;
+  cursor: pointer;
+}
+
