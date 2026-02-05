@@ -1,4 +1,4 @@
-// app.js (ESM) — limpio para GitHub Pages (sin duplicados)
+// app.js (ESM) — GitHub Pages + Firebase Auth + Firestore
 // Board + Multi-Notebook + Pages (Firestore)
 
 // =========================
@@ -45,7 +45,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // =========================
-// 3) DOM refs
+// 3) DOM refs (board)
 // =========================
 const board = document.getElementById("board");
 const boardHint = document.getElementById("boardHint");
@@ -68,7 +68,9 @@ const btnAddImage = document.getElementById("btnAddImage");
 const btnClear = document.getElementById("btnClear");
 const toast = document.getElementById("toast");
 
-// Notebook modal (ya los tienes)
+// =========================
+// 3.5) DOM refs (notebook modal)
+// =========================
 const btnNotebook = document.getElementById("btnNotebook");
 const notebookOverlay = document.getElementById("notebookOverlay");
 const btnCloseNotebook = document.getElementById("btnCloseNotebook");
@@ -78,11 +80,7 @@ const tabs = document.getElementById("tabs");
 const pageEditor = document.getElementById("pageEditor");
 const saveStatus = document.getElementById("saveStatus");
 
-// ✅ NUEVOS (tú debes crear estos elementos en tu HTML dentro del modal)
-// <select id="notebookSelect"></select>
-// <button id="btnNewNotebook">+ Libreta</button>
-// <button id="btnRenameNotebook">Renombrar</button>
-// <button id="btnDeleteNotebook">Borrar Libreta</button>
+// New: notebooks selector + actions (must exist in HTML)
 const notebookSelect = document.getElementById("notebookSelect");
 const btnNewNotebook = document.getElementById("btnNewNotebook");
 const btnRenameNotebook = document.getElementById("btnRenameNotebook");
@@ -95,11 +93,10 @@ let currentUser = null;
 let selectedEl = null;
 let zCounter = 10;
 
-// Notebooks + Pages state
-let notebooks = [];              // [{id, title, createdAt, updatedAt}]
+let notebooks = [];              // [{id,title,createdAt,updatedAt}]
 let activeNotebookId = null;
 
-let notebookPages = [];          // [{id, title, content, createdAt, updatedAt}]
+let notebookPages = [];          // [{id,title,content,createdAt,updatedAt}]
 let activePageId = null;
 
 let saveTimer = null;
@@ -121,6 +118,10 @@ function requireAuth() {
     return false;
   }
   return true;
+}
+
+function genId() {
+  return crypto.randomUUID();
 }
 
 function randRot() {
@@ -147,10 +148,6 @@ function bringToFront(el) {
   el.style.zIndex = String(zCounter);
 }
 
-function genId() {
-  return crypto.randomUUID();
-}
-
 function lsKey(name) {
   const uid = currentUser?.uid || "anon";
   return `board.${uid}.${name}`;
@@ -167,7 +164,7 @@ function itemDoc(uid, itemId) {
   return doc(db, "users", uid, "items", itemId);
 }
 
-// ✅ Notebooks: users/{uid}/notebooks/{notebookId}
+// Notebooks: users/{uid}/notebooks/{notebookId}
 function notebooksCol(uid) {
   return collection(db, "users", uid, "notebooks");
 }
@@ -175,7 +172,7 @@ function notebookDoc(uid, notebookId) {
   return doc(db, "users", uid, "notebooks", notebookId);
 }
 
-// ✅ Pages: users/{uid}/notebooks/{notebookId}/pages/{pageId}
+// Pages: users/{uid}/notebooks/{notebookId}/pages/{pageId}
 function pagesCol(uid, notebookId) {
   return collection(db, "users", uid, "notebooks", notebookId, "pages");
 }
@@ -283,8 +280,8 @@ function attachDragHandlers(el) {
     dragging = false;
 
     if (!currentUser) return;
-    const id = el.dataset.id;
 
+    const id = el.dataset.id;
     const x = parseFloat(el.style.left) || 0;
     const y = parseFloat(el.style.top) || 0;
     const z = parseInt(el.style.zIndex || "10", 10);
@@ -343,7 +340,7 @@ async function addImage() {
   if (!file) return showToast("Selecciona una imagen.");
 
   if (file.size > 2_000_000) {
-    return showToast("Imagen muy grande (>2MB). Usa una más pequeña para esta demo.");
+    return showToast("Imagen muy grande (>2MB). Usa una más pequeña.");
   }
 
   const dataUrl = await fileToDataUrl(file);
@@ -419,24 +416,40 @@ async function clearAll() {
 // =========================
 // 9.5) Notebooks + Pages (Modal)
 // =========================
+function resetPagesUI() {
+  notebookPages = [];
+  activePageId = null;
+  if (tabs) tabs.innerHTML = "";
+  if (pageEditor) pageEditor.value = "";
+  if (saveStatus) saveStatus.textContent = "—";
+}
+
 function renderNotebookSelect() {
   if (!notebookSelect) return;
 
   notebookSelect.innerHTML = "";
-  for (const nb of notebooks) {
+
+  if (notebooks.length === 0) {
     const opt = document.createElement("option");
-    opt.value = nb.id;
-    opt.textContent = nb.title || "Libreta";
-    if (nb.id === activeNotebookId) opt.selected = true;
+    opt.value = "";
+    opt.textContent = "(sin libretas)";
     notebookSelect.appendChild(opt);
+  } else {
+    for (const nb of notebooks) {
+      const opt = document.createElement("option");
+      opt.value = nb.id;
+      opt.textContent = nb.title || "Libreta";
+      if (nb.id === activeNotebookId) opt.selected = true;
+      notebookSelect.appendChild(opt);
+    }
   }
 
-  // si no hay libretas, deshabilita controles
   const has = notebooks.length > 0;
   if (btnRenameNotebook) btnRenameNotebook.disabled = !has;
   if (btnDeleteNotebook) btnDeleteNotebook.disabled = !has;
   if (btnNewPage) btnNewPage.disabled = !has;
   if (btnDeletePage) btnDeletePage.disabled = !has;
+  if (pageEditor) pageEditor.disabled = !has;
 }
 
 function renderTabs() {
@@ -480,16 +493,13 @@ async function loadNotebooks() {
 
   notebooks.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
-  // restaura el último notebook usado
   const preferred = localStorage.getItem(lsKey("activeNotebookId"));
   const exists = preferred && notebooks.some(n => n.id === preferred);
 
-  if (exists) {
-    activeNotebookId = preferred;
-  } else if (notebooks.length > 0) {
-    activeNotebookId = notebooks[0].id;
-  } else {
-    // crea una libreta por defecto
+  if (exists) activeNotebookId = preferred;
+  else if (notebooks.length > 0) activeNotebookId = notebooks[0].id;
+
+  if (!activeNotebookId) {
     await createNotebook("Mi Libreta");
     return;
   }
@@ -499,8 +509,7 @@ async function loadNotebooks() {
 }
 
 async function loadPagesForActiveNotebook() {
-  notebookPages = [];
-  activePageId = null;
+  resetPagesUI();
 
   if (!currentUser || !activeNotebookId) return;
 
@@ -510,7 +519,7 @@ async function loadPagesForActiveNotebook() {
   notebookPages.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
   if (notebookPages.length === 0) {
-    await createNewPage(); // crea primera página automáticamente
+    await createNewPage(); // crea la primera automáticamente
     return;
   }
 
@@ -519,6 +528,7 @@ async function loadPagesForActiveNotebook() {
 
 async function setActiveNotebook(notebookId) {
   if (!currentUser) return;
+  if (!notebookId) return;
   if (notebookId === activeNotebookId) return;
 
   clearTimeout(saveTimer);
@@ -538,29 +548,28 @@ async function createNotebook(defaultTitle = null) {
   if (!title) return;
 
   const id = genId();
-  const nb = {
-    id,
-    title,
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  };
+  const nb = { id, title, createdAt: Date.now(), updatedAt: Date.now() };
 
   await setDoc(notebookDoc(currentUser.uid, id), nb);
   notebooks.unshift(nb);
 
-  await setActiveNotebook(id);
+  activeNotebookId = id;
+  localStorage.setItem(lsKey("activeNotebookId"), activeNotebookId);
+
+  renderNotebookSelect();
+  await loadPagesForActiveNotebook();
   showToast("Libreta creada ✅");
 }
 
 async function renameActiveNotebook() {
-  if (!requireAuth()) return;
-  if (!activeNotebookId) return;
+  if (!requireAuth() || !activeNotebookId) return;
 
   const nb = notebooks.find(n => n.id === activeNotebookId);
   if (!nb) return;
 
   const next = prompt("Nuevo nombre:", nb.title || "Mi Libreta");
   if (next === null) return;
+
   const title = next.trim();
   if (!title) return;
 
@@ -573,7 +582,6 @@ async function renameActiveNotebook() {
 }
 
 async function batchDeleteByRefs(refs) {
-  // Firestore batch limit = 500 operaciones
   const chunks = [];
   for (let i = 0; i < refs.length; i += 450) chunks.push(refs.slice(i, i + 450));
 
@@ -585,8 +593,7 @@ async function batchDeleteByRefs(refs) {
 }
 
 async function deleteActiveNotebook() {
-  if (!requireAuth()) return;
-  if (!activeNotebookId) return;
+  if (!requireAuth() || !activeNotebookId) return;
 
   const nb = notebooks.find(n => n.id === activeNotebookId);
   const name = nb?.title || "esta libreta";
@@ -595,53 +602,43 @@ async function deleteActiveNotebook() {
 
   clearTimeout(saveTimer);
 
-  // 1) borrar páginas
   const pagesSnap = await getDocs(pagesCol(currentUser.uid, activeNotebookId));
   const pageRefs = [];
   pagesSnap.forEach(d => pageRefs.push(d.ref));
   await batchDeleteByRefs(pageRefs);
 
-  // 2) borrar notebook doc
   await deleteDoc(notebookDoc(currentUser.uid, activeNotebookId));
 
-  // 3) limpiar estado local
   notebooks = notebooks.filter(n => n.id !== activeNotebookId);
   activeNotebookId = null;
-  notebookPages = [];
-  activePageId = null;
 
-  // 4) elegir otro o crear uno nuevo
   if (notebooks.length === 0) {
     await createNotebook("Mi Libreta");
   } else {
-    await setActiveNotebook(notebooks[0].id);
+    activeNotebookId = notebooks[0].id;
+    localStorage.setItem(lsKey("activeNotebookId"), activeNotebookId);
+    renderNotebookSelect();
+    await loadPagesForActiveNotebook();
   }
-
-  renderNotebookSelect();
-  renderTabs();
-  if (pageEditor) pageEditor.value = "";
-  if (saveStatus) saveStatus.textContent = "—";
 
   showToast("Libreta borrada ✅");
 }
 
 async function createNewPage() {
   if (!requireAuth()) return;
-  if (!activeNotebookId) return showToast("Primero crea/selecciona una libreta.");
+  if (!activeNotebookId) return showToast("Primero selecciona una libreta.");
 
   const id = genId();
   const title = `Página ${notebookPages.length + 1}`;
-  const page = {
-    id,
-    title,
-    content: "",
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  };
+  const page = { id, title, content: "", createdAt: Date.now(), updatedAt: Date.now() };
 
   await setDoc(pageDoc(currentUser.uid, activeNotebookId, id), page);
+
   notebookPages.unshift(page);
-  setActivePage(id);
+  setActivePage(id);       // esto renderiza tabs + editor
+  renderTabs();            // redundante intencional (UI siempre consistente)
+  if (pageEditor) pageEditor.focus();
+
   showToast("Nueva página creada.");
 }
 
@@ -693,6 +690,7 @@ async function openNotebook() {
 
   try {
     await loadNotebooks();
+    renderNotebookSelect();
     await loadPagesForActiveNotebook();
   } catch (e) {
     console.error("NOTEBOOK OPEN ERROR:", e);
@@ -724,9 +722,7 @@ btnLoginGoogle?.addEventListener("click", async () => {
     await signInWithPopup(auth, provider);
   } catch (e) {
     console.error("AUTH ERROR:", e);
-    const code = e?.code || "";
-    const msg = e?.message || "";
-    showToast(code ? `Error: ${code}` : `Error: ${msg}`);
+    showToast(e?.code ? `Error: ${e.code}` : `Error: ${e?.message || e}`);
   }
 });
 
@@ -752,7 +748,7 @@ onAuthStateChanged(auth, async (user) => {
 
     await loadBoard();
 
-    // precarga: libreta/lista (no abre el modal, solo prepara estado)
+    // precarga notebooks/pages (no abre modal)
     try {
       await loadNotebooks();
       await loadPagesForActiveNotebook();
@@ -772,18 +768,12 @@ onAuthStateChanged(auth, async (user) => {
 
     selectedEl = null;
 
-    // reset notebooks/pages
     notebooks = [];
     activeNotebookId = null;
-    notebookPages = [];
-    activePageId = null;
-
+    resetPagesUI();
     if (notebookSelect) notebookSelect.innerHTML = "";
-    if (tabs) tabs.innerHTML = "";
-    if (pageEditor) pageEditor.value = "";
-    if (saveStatus) saveStatus.textContent = "—";
-    notebookOverlay?.classList.add("hidden");
 
+    notebookOverlay?.classList.add("hidden");
     await loadBoard();
   }
 });
@@ -807,31 +797,17 @@ board?.addEventListener("mousedown", (e) => {
 btnNotebook?.addEventListener("click", openNotebook);
 btnCloseNotebook?.addEventListener("click", closeNotebook);
 
-btnNewPage?.addEventListener("click", async () => {
-  await createNewPage();
-});
+btnNewPage?.addEventListener("click", createNewPage);
+btnDeletePage?.addEventListener("click", deleteActivePage);
 
-btnDeletePage?.addEventListener("click", async () => {
-  await deleteActivePage();
-});
-
-// ✅ nuevos controles
+// Notebook controls
 notebookSelect?.addEventListener("change", async () => {
-  const id = notebookSelect.value;
-  await setActiveNotebook(id);
+  await setActiveNotebook(notebookSelect.value);
 });
 
-btnNewNotebook?.addEventListener("click", async () => {
-  await createNotebook();
-});
-
-btnRenameNotebook?.addEventListener("click", async () => {
-  await renameActiveNotebook();
-});
-
-btnDeleteNotebook?.addEventListener("click", async () => {
-  await deleteActiveNotebook();
-});
+btnNewNotebook?.addEventListener("click", () => createNotebook());
+btnRenameNotebook?.addEventListener("click", renameActiveNotebook);
+btnDeleteNotebook?.addEventListener("click", deleteActiveNotebook);
 
 notebookOverlay?.addEventListener("mousedown", (e) => {
   if (e.target === notebookOverlay) closeNotebook();
