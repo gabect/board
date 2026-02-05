@@ -884,3 +884,20 @@ pageEditor?.addEventListener("input", () => {
   if (!activeNotebookId || !activePageId) return;
   scheduleSave();
 });
+
+// ===== Theme toggle (Corkboard) =====
+const btnTheme = document.getElementById("btnTheme");
+
+function applyThemeFromStorage() {
+  const t = localStorage.getItem("board.theme") || "minimal";
+  document.body.classList.toggle("theme-cork", t === "cork");
+}
+
+function toggleTheme() {
+  const isCork = document.body.classList.toggle("theme-cork");
+  localStorage.setItem("board.theme", isCork ? "cork" : "minimal");
+}
+
+applyThemeFromStorage();
+btnTheme?.addEventListener("click", toggleTheme);
+
