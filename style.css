@@ -467,3 +467,89 @@ kbd{
 @media (prefers-reduced-motion: reduce){
   .btn{ transition:none; }
 }
+
+/* ===== Notebook Index (Right Column) ===== */
+.indexCol{
+  width: 280px;
+  border-left: 1px solid var(--line);
+  background: rgba(255,255,255,.02);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.indexTop{
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.indexTitleRow{
+  display:flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.indexActions{
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.indexSection{
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.indexSectionTitle{
+  margin-bottom: 8px;
+  letter-spacing: .08em;
+}
+
+.indexList{
+  display:flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;           /* ajusta si quieres */
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.indexItem{
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.04);
+  border-radius: 12px;
+  padding: 10px 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.indexItem:hover{
+  background: rgba(255,255,255,.07);
+}
+
+.indexItem.active{
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.20);
+  outline: 2px solid rgba(255,255,255,.10);
+  outline-offset: 1px;
+}
+
+.indexItem .name{
+  font-size: .95rem;
+  line-height: 1.15;
+}
+
+.indexPageActions{
+  margin-top: 10px;
+  display:flex;
+  justify-content: flex-end;
+}
+
+.indexFooter{
+  margin-top: auto;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+
