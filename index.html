@@ -101,19 +101,32 @@
 
   <div id="toast" class="toast hidden"></div>
 
-<!-- Notebook Modal -->
-<div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
-  <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
-    <div class="modalTop">
-      <div class="modalTitle">
-        <strong>Libreta</strong>
-        <span class="muted small">— páginas privadas</span>
-      </div>
-      <div class="modalActions">
-        <button id="btnNewPage" class="btn">+ Página</button>
-        <button id="btnCloseNotebook" class="btn">Cerrar</button>
-      </div>
-    </div>
+
+  <!-- Notebook Modal -->
+  <div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
+    <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
+      <div class="modalTop">
+        <div class="modalTitle">
+          <strong>Libreta</strong>
+          <span class="muted small">— páginas privadas</span>
+
+          <!-- ========================= -->
+          <!-- [NEW] Notebook selector + actions -->
+          <!-- ========================= -->
+          <div class="row" style="gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <select id="notebookSelect" class="btn" style="min-width:220px;">
+              <option value="">(cargando...)</option>
+            </select>
+
+            <button id="btnNewNotebook" class="btn">+ Libreta</button>
+            <button id="btnRenameNotebook" class="btn">Renombrar</button>
+            <button id="btnDeleteNotebook" class="btn danger">Borrar</button>
+          </div>
+          <!-- ========================= -->
+          <!-- [/NEW] -->
+          <!-- ========================= -->
+
+        </div>
 
     <div class="tabsBar">
       <div id="tabs" class="tabs"></div>
