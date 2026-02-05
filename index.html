@@ -105,10 +105,12 @@
 <div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
   <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
 
+    <!-- TOP BAR -->
     <div class="modalTop">
       <div class="modalTitle">
         <strong>Libreta</strong>
         <span class="muted small">— notas privadas</span>
+        <span id="activeContextLabel" class="muted small" style="margin-left:10px;">—</span>
       </div>
 
       <div class="modalActions">
@@ -116,6 +118,50 @@
         <button id="btnCloseNotebook" class="btn">Cerrar</button>
       </div>
     </div>
+
+    <!-- BODY: LEFT INDEX + RIGHT EDITOR -->
+    <div class="modalBodySplit">
+
+      <!-- LEFT: INDEX -->
+      <aside class="indexPanel">
+        <div class="indexHeader">
+          <div class="indexTitle">
+            <strong>Índice</strong>
+          </div>
+          <div class="indexActions">
+            <button id="btnNewNotebook" class="btn">+ Libreta</button>
+            <button id="btnRenameNotebook" class="btn">Renombrar</button>
+            <button id="btnDeleteNotebook" class="btn danger">Borrar</button>
+          </div>
+        </div>
+
+        <div class="indexSection">
+          <div class="indexLabel muted small">LIBRETAS</div>
+          <div id="notebookList" class="indexList"></div>
+        </div>
+
+        <div class="indexSection">
+          <div class="indexLabel muted small">PÁGINAS</div>
+          <div id="pageList" class="indexList"></div>
+
+          <div class="indexFooter">
+            <button id="btnDeletePage" class="btn danger">Eliminar página</button>
+          </div>
+        </div>
+
+        <div class="indexStatus">
+          <span id="saveStatus" class="muted small">—</span>
+        </div>
+      </aside>
+
+      <!-- RIGHT: EDITOR -->
+      <section class="editorPanel">
+        <textarea id="pageEditor" class="pageEditor" placeholder="Escribe aquí..."></textarea>
+      </section>
+
+    </div>
+  </div>
+</div>
 
 <!-- Right Index Column -->
 <aside class="indexCol" aria-label="Índice">
