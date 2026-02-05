@@ -117,6 +117,41 @@
       </div>
     </div>
 
+<!-- Right Index Column -->
+<aside class="indexCol" aria-label="Índice">
+  <div class="indexTop">
+    <div class="indexTitleRow">
+      <strong>Índice</strong>
+      <span id="activeContextLabel" class="muted small">—</span>
+    </div>
+
+    <div class="indexActions">
+      <button id="btnNewNotebook" class="btn">+ Libreta</button>
+      <button id="btnRenameNotebook" class="btn">Renombrar</button>
+      <button id="btnDeleteNotebook" class="btn danger">Borrar</button>
+    </div>
+  </div>
+
+  <div class="indexSection">
+    <div class="indexSectionTitle muted small">LIBRETAS</div>
+    <div id="notebookList" class="indexList" role="list"></div>
+  </div>
+
+  <div class="indexSection">
+    <div class="indexSectionTitle muted small">PÁGINAS</div>
+    <div id="pageList" class="indexList" role="list"></div>
+
+    <div class="indexPageActions">
+      <button id="btnDeletePage" class="btn danger">Eliminar</button>
+    </div>
+  </div>
+
+  <div class="indexFooter">
+    <span id="saveStatus" class="muted small">—</span>
+  </div>
+</aside>
+
+    
     <div class="notebookBody">
       <!-- Editor -->
       <div class="pageArea">
