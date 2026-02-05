@@ -100,48 +100,75 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <!-- Notebook Modal -->
-  <div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
-    <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
-      
-      <div class="modalTop">
-        <div class="modalTitle">
-          <strong>Libreta</strong>
-          <span class="muted small">— páginas privadas</span>
-        </div>
+ 
+<!-- Notebook Modal -->
+<div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
+  <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
 
-        <div class="modalActions">
-          <button id="btnNewPage" class="btn">+ Página</button>
-          <button id="btnCloseNotebook" class="btn">Cerrar</button>
-        </div>
+    <div class="modalTop">
+      <div class="modalTitle">
+        <strong>Libreta</strong>
+        <span class="muted small">— notas privadas</span>
       </div>
 
-      <!-- Notebook selector + actions -->
-      <div class="row" style="gap:8px; padding: 0 12px 12px; flex-wrap:wrap;">
-        <select id="notebookSelect" class="btn" style="min-width:240px;">
-          <option value="">(cargando...)</option>
-        </select>
-
-        <button id="btnNewNotebook" class="btn">+ Libreta</button>
-        <button id="btnRenameNotebook" class="btn">Renombrar</button>
-        <button id="btnDeleteNotebook" class="btn danger">Borrar</button>
+      <div class="modalActions">
+        <button id="btnNewPage" class="btn">+ Página</button>
+        <button id="btnCloseNotebook" class="btn">Cerrar</button>
       </div>
+    </div>
 
-      <div class="tabsBar">
-        <div id="tabs" class="tabs"></div>
-      </div>
-
+    <div class="notebookBody">
+      <!-- Editor -->
       <div class="pageArea">
         <textarea id="pageEditor" class="pageEditor" placeholder="Escribe aquí..."></textarea>
       </div>
 
-      <div class="modalBottom">
-        <span id="saveStatus" class="muted small">Estado: —</span>
-        <button id="btnDeletePage" class="btn danger">Eliminar página</button>
-      </div>
+      <!-- Índice derecho -->
+      <aside class="indexPane">
+        <div class="indexHeader">
+          <div class="indexTitle">
+            <h4>Índice</h4>
+            <span class="muted small" id="activeContextLabel">—</span>
+          </div>
 
+          <div class="indexActions">
+            <button id="btnNewNotebook" class="btn">+ Libreta</button>
+            <button id="btnRenameNotebook" class="btn">Renombrar</button>
+            <button id="btnDeleteNotebook" class="btn danger">Borrar</button>
+          </div>
+        </div>
+
+        <div class="indexLists">
+          <!-- Libretas -->
+          <section class="indexSection">
+            <div class="indexSectionHeader">
+              <div class="label">Libretas</div>
+            </div>
+            <div id="notebookList" class="indexList">
+              <!-- JS renderiza aquí -->
+            </div>
+          </section>
+
+          <!-- Páginas -->
+          <section class="indexSection">
+            <div class="indexSectionHeader">
+              <div class="label">Páginas</div>
+              <button id="btnDeletePage" class="btn danger">Eliminar</button>
+            </div>
+            <div id="pageList" class="indexList">
+              <!-- JS renderiza aquí -->
+            </div>
+            <div class="modalBottom" style="border-top:1px solid var(--line);">
+              <span id="saveStatus" class="muted small">—</span>
+            </div>
+          </section>
+        </div>
+      </aside>
     </div>
+
   </div>
+</div>
+
 
   <script type="module" src="app.js?v=999"></script>
 </body>
