@@ -2,15 +2,13 @@
 <html lang="es">
 <head>
   <link rel="icon" href="data:,">
-
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Private Bulletin Board</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <span id="saveStatus" class="muted small">Estado: —</span>
 
+<body>
   <header class="topbar">
     <div class="brand">
       <span class="dot"></span>
@@ -82,10 +80,9 @@
       </div>
 
       <div class="card">
-  <h3>Libreta</h3>
-  <button id="btnNotebook" class="btn">Abrir libreta</button>
-</div>
-
+        <h3>Libreta</h3>
+        <button id="btnNotebook" class="btn">Abrir libreta</button>
+      </div>
 
       <div class="card small muted">
         <strong>Privacidad:</strong> solo usuarios autenticados ven su propio tablero (por UID).
@@ -103,49 +100,49 @@
 
   <div id="toast" class="toast hidden"></div>
 
-
   <!-- Notebook Modal -->
   <div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
     <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
+      
       <div class="modalTop">
         <div class="modalTitle">
           <strong>Libreta</strong>
           <span class="muted small">— páginas privadas</span>
-
-          <!-- ========================= -->
-          <!-- [NEW] Notebook selector + actions -->
-          <!-- ========================= -->
-          <div class="row" style="gap:8px; margin-top:8px; flex-wrap:wrap;">
-            <select id="notebookSelect" class="btn" style="min-width:220px;">
-              <option value="">(cargando...)</option>
-            </select>
-
-            <button id="btnNewNotebook" class="btn">+ Libreta</button>
-            <button id="btnRenameNotebook" class="btn">Renombrar</button>
-            <button id="btnDeleteNotebook" class="btn danger">Borrar</button>
-          </div>
-          <!-- ========================= -->
-          <!-- [/NEW] -->
-          <!-- ========================= -->
-
         </div>
 
-    <div class="tabsBar">
-      <div id="tabs" class="tabs"></div>
-    </div>
+        <div class="modalActions">
+          <button id="btnNewPage" class="btn">+ Página</button>
+          <button id="btnCloseNotebook" class="btn">Cerrar</button>
+        </div>
+      </div>
 
-    <div class="pageArea">
-      <textarea id="pageEditor" class="pageEditor" placeholder="Escribe aquí..."></textarea>
-    </div>
+      <!-- Notebook selector + actions -->
+      <div class="row" style="gap:8px; padding: 0 12px 12px; flex-wrap:wrap;">
+        <select id="notebookSelect" class="btn" style="min-width:240px;">
+          <option value="">(cargando...)</option>
+        </select>
 
-    <div class="modalBottom">
-      <span id="saveStatus" class="muted small">—</span>
-      <button id="btnDeletePage" class="btn danger">Eliminar página</button>
+        <button id="btnNewNotebook" class="btn">+ Libreta</button>
+        <button id="btnRenameNotebook" class="btn">Renombrar</button>
+        <button id="btnDeleteNotebook" class="btn danger">Borrar</button>
+      </div>
+
+      <div class="tabsBar">
+        <div id="tabs" class="tabs"></div>
+      </div>
+
+      <div class="pageArea">
+        <textarea id="pageEditor" class="pageEditor" placeholder="Escribe aquí..."></textarea>
+      </div>
+
+      <div class="modalBottom">
+        <span id="saveStatus" class="muted small">Estado: —</span>
+        <button id="btnDeletePage" class="btn danger">Eliminar página</button>
+      </div>
+
     </div>
   </div>
-</div>
 
-  
-<script type="module" src="app.js?v=999"></script>
+  <script type="module" src="app.js?v=999"></script>
 </body>
 </html>
