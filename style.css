@@ -1,41 +1,29 @@
 /* =========================================================
-   Minimal Focus Dark — CSS completo (sustituye tu style.css)
-   - Grises cálidos + acento azul-gris muy suave
-   - Menos distracciones, más legible para foco prolongado
+   Minimal Focus Dark — con índice derecho (Libretas + Páginas)
+   Sustituye tu style.css completo
    ========================================================= */
 
-/* ---------- Theme tokens ---------- */
 :root{
-  /* Base */
   --bg:#0f1115;
   --panel:#14171d;
   --card:#171b22;
   --surface:#1c2028;
 
-  /* Text */
   --text:#e6e8eb;
   --muted:#9aa0a6;
-
-  /* Lines / borders */
   --line:rgba(255,255,255,.08);
 
-  /* Accent (subtle) */
   --accent:#6b7c93;
   --accent-soft:rgba(107,124,147,.18);
 
-  /* Danger (muted) */
   --danger:#a65a5a;
   --danger-soft:rgba(166,90,90,.18);
 
-  /* Shadow / radius */
   --radius:14px;
   --shadow:0 10px 30px rgba(0,0,0,.45);
-
-  /* Focus ring */
   --focus:rgba(107,124,147,.55);
 }
 
-/* ---------- Global ---------- */
 *{ box-sizing:border-box; }
 html, body{ height:100%; }
 body{
@@ -44,14 +32,10 @@ body{
   background: var(--bg);
   color: var(--text);
 }
-
 .hidden{ display:none !important; }
 .muted{ color: var(--muted); }
 .small{ font-size:.9rem; }
 
-a{ color: var(--text); }
-
-/* ---------- Topbar ---------- */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -65,47 +49,28 @@ a{ color: var(--text); }
   z-index:1000;
 }
 
-.brand{
-  display:flex;
-  align-items:baseline;
-  gap:10px;
-}
+.brand{ display:flex; align-items:baseline; gap:10px; }
 .brand .dot{
-  width:10px; height:10px;
-  border-radius:50%;
+  width:10px; height:10px; border-radius:50%;
   background: var(--accent);
   box-shadow: 0 0 0 2px rgba(255,255,255,.04);
 }
 
-.auth{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-/* ---------- User badge ---------- */
+.auth{ display:flex; align-items:center; gap:10px; }
 .userBadge{
-  display:flex;
-  align-items:center;
-  gap:10px;
+  display:flex; align-items:center; gap:10px;
   padding:6px 10px;
   border:1px solid var(--line);
   border-radius:999px;
   background: rgba(255,255,255,.03);
 }
 .userBadge img{
-  width:28px; height:28px;
-  border-radius:50%;
+  width:28px; height:28px; border-radius:50%;
   border:1px solid var(--line);
 }
-.userMeta{
-  display:flex;
-  flex-direction:column;
-  line-height:1.1;
-}
+.userMeta{ display:flex; flex-direction:column; line-height:1.1; }
 .userName{ font-weight:600; font-size:.95rem; }
 
-/* ---------- Buttons ---------- */
 .btn{
   cursor:pointer;
   border:1px solid var(--line);
@@ -117,7 +82,6 @@ a{ color: var(--text); }
 }
 .btn:hover{ background:#20252f; }
 .btn:active{ transform: translateY(1px); }
-
 .btn.primary{
   background: var(--accent-soft);
   border-color: rgba(107,124,147,.45);
@@ -126,13 +90,8 @@ a{ color: var(--text); }
   background: var(--danger-soft);
   border-color: rgba(166,90,90,.55);
 }
+.btn:disabled{ opacity:.5; cursor:not-allowed; }
 
-.btn:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-}
-
-/* ---------- Layout ---------- */
 .layout{
   display:grid;
   grid-template-columns: 320px 1fr;
@@ -140,12 +99,10 @@ a{ color: var(--text); }
   padding:14px;
   min-height: calc(100vh - 56px);
 }
-
 @media (max-width: 980px){
   .layout{ grid-template-columns: 1fr; }
 }
 
-/* ---------- Panel / Cards ---------- */
 .panel{
   background: var(--panel);
   border:1px solid var(--line);
@@ -153,12 +110,7 @@ a{ color: var(--text); }
   padding:14px;
   box-shadow: var(--shadow);
 }
-
-.panel h2{
-  margin:6px 0 12px 0;
-  font-size:1.15rem;
-  font-weight:650;
-}
+.panel h2{ margin:6px 0 12px 0; font-size:1.15rem; font-weight:650; }
 
 .card{
   background: var(--card);
@@ -167,17 +119,10 @@ a{ color: var(--text); }
   padding:12px;
   margin:10px 0;
 }
-
-.card h3{
-  margin:0 0 10px 0;
-  font-size:1rem;
-  font-weight:650;
-}
-
+.card h3{ margin:0 0 10px 0; font-size:1rem; font-weight:650; }
 .card.danger{ border-color: rgba(166,90,90,.35); }
 .card.info{ border-color: rgba(107,124,147,.30); }
 
-/* ---------- Inputs ---------- */
 textarea, select, input[type="file"]{
   width:100%;
   margin-top:6px;
@@ -188,9 +133,7 @@ textarea, select, input[type="file"]{
   border-radius:10px;
   outline:none;
 }
-
 textarea::placeholder{ color: rgba(154,160,166,.75); }
-
 textarea:focus, select:focus, input[type="file"]:focus{
   border-color: var(--focus);
   box-shadow: 0 0 0 3px rgba(107,124,147,.12);
@@ -205,7 +148,6 @@ textarea:focus, select:focus, input[type="file"]:focus{
 .row > *{ flex:1; }
 .row .btn{ flex:0 0 auto; }
 
-/* ---------- Board wrapper ---------- */
 .boardWrap{
   background: var(--panel);
   border:1px solid var(--line);
@@ -214,16 +156,12 @@ textarea:focus, select:focus, input[type="file"]:focus{
   overflow:hidden;
   position:relative;
 }
-
-/* ---------- Board ---------- */
 .board{
   position:relative;
   width:100%;
   height: calc(100vh - 92px);
   background: #12151b;
 }
-
-/* Optional subtle grid (very quiet) */
 .board::before{
   content:"";
   position:absolute; inset:0;
@@ -232,7 +170,6 @@ textarea:focus, select:focus, input[type="file"]:focus{
   opacity:.25;
   pointer-events:none;
 }
-
 .boardHint{
   position:absolute;
   inset:0;
@@ -246,7 +183,6 @@ textarea:focus, select:focus, input[type="file"]:focus{
   pointer-events:none;
 }
 
-/* ---------- Items ---------- */
 .item{
   position:absolute;
   user-select:none;
@@ -256,20 +192,17 @@ textarea:focus, select:focus, input[type="file"]:focus{
   border:1px solid rgba(255,255,255,.06);
 }
 .item:active{ cursor:grabbing; }
-
 .item.selected{
   outline:2px solid var(--focus);
   outline-offset:2px;
 }
 
-/* Notes (keep readable) */
 .note{
   width: 220px;
   min-height: 140px;
   padding:12px 12px 18px 12px;
   transform: rotate(var(--rot));
 }
-
 .note .pin{
   position:absolute;
   top:8px; left:50%;
@@ -279,15 +212,12 @@ textarea:focus, select:focus, input[type="file"]:focus{
   background: rgba(255,255,255,.35);
   box-shadow: 0 6px 14px rgba(0,0,0,.35);
 }
-
 .note .content{
   white-space:pre-wrap;
   font-size: 1rem;
   line-height: 1.25;
   color: rgba(20,20,20,.92);
 }
-
-/* Keep your color notes (optional) */
 .note.yellow{ background:#fff4a6; }
 .note.pink{ background:#ffd0e3; }
 .note.blue{ background:#bfe7ff; }
@@ -297,7 +227,6 @@ textarea:focus, select:focus, input[type="file"]:focus{
   border-color: rgba(0,0,0,.10);
 }
 
-/* Photos */
 .photo{
   width: 260px;
   height: 180px;
@@ -305,12 +234,7 @@ textarea:focus, select:focus, input[type="file"]:focus{
   background:#0b0d12;
   transform: rotate(var(--rot));
 }
-.photo img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
+.photo img{ width:100%; height:100%; object-fit:cover; display:block; }
 .photo .pin{
   position:absolute;
   top:8px; left:50%;
@@ -321,7 +245,6 @@ textarea:focus, select:focus, input[type="file"]:focus{
   box-shadow: 0 6px 14px rgba(0,0,0,.35);
 }
 
-/* ---------- Toast ---------- */
 .toast{
   position: fixed;
   left: 50%;
@@ -336,7 +259,6 @@ textarea:focus, select:focus, input[type="file"]:focus{
   z-index: 2000;
 }
 
-/* ---------- KBD ---------- */
 kbd{
   background: rgba(255,255,255,.06);
   border: 1px solid var(--line);
@@ -345,9 +267,9 @@ kbd{
   font-size: .9em;
 }
 
-/* =========================================================
-   Notebook Modal
-   ========================================================= */
+/* =========================
+   Notebook Modal (nuevo layout)
+   ========================= */
 .overlay{
   position: fixed;
   inset: 0;
@@ -360,8 +282,8 @@ kbd{
 }
 
 .modal{
-  width: min(980px, 96vw);
-  height: min(680px, 88vh);
+  width: min(1100px, 96vw);
+  height: min(720px, 90vh);
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -371,7 +293,6 @@ kbd{
   overflow: hidden;
 }
 
-/* top & bottom bars */
 .modalTop, .modalBottom{
   display:flex;
   align-items:center;
@@ -389,7 +310,6 @@ kbd{
   gap:10px;
   flex-wrap:wrap;
 }
-
 .modalActions{
   display:flex;
   gap:10px;
@@ -397,93 +317,153 @@ kbd{
   flex-wrap:wrap;
 }
 
-/* Notebook selector row inside modal title area */
-.notebookBar{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  flex-wrap:wrap;
-  width:100%;
-  margin-top:8px;
-}
-
-#notebookSelect{
-  min-width: 220px;
-}
-
-/* Tabs */
-.tabsBar{
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-  overflow-x: auto;
-  background: rgba(255,255,255,.01);
-}
-.tabs{
-  display:flex;
-  gap: 8px;
-  align-items:center;
-}
-
-.tab{
-  flex: 0 0 auto;
-  padding: 8px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.03);
-  color: rgba(230,232,235,.92);
-  cursor: pointer;
-  font-size: .92rem;
-  user-select:none;
-}
-.tab:hover{ background: rgba(255,255,255,.06); }
-.tab.active{
-  background: var(--accent-soft);
-  border-color: rgba(107,124,147,.45);
-}
-
-/* Editor area */
-.pageArea{
+/* ---- Body split: editor left, index right ---- */
+.notebookBody{
   flex:1;
-  padding: 12px;
-  overflow: hidden;
+  display:grid;
+  grid-template-columns: 1fr 320px; /* editor | index */
+  min-height: 0; /* IMPORTANT for scroll areas */
 }
 
+/* Editor */
+.pageArea{
+  padding: 12px;
+  min-height: 0;
+}
 .pageEditor{
-  width: 100%;
-  height: 100%;
-  resize: none;
+  width:100%;
+  height:100%;
+  resize:none;
   border-radius: 12px;
   background: #0e1117;
   border: 1px solid var(--line);
   color: var(--text);
   padding: 16px;
-  outline: none;
+  outline:none;
   line-height: 1.6;
   font-size: 1rem;
 }
-
-.pageEditor::placeholder{
-  color: rgba(154,160,166,.70);
-}
-
+.pageEditor::placeholder{ color: rgba(154,160,166,.70); }
 .pageEditor:focus{
   border-color: var(--focus);
   box-shadow: 0 0 0 3px rgba(107,124,147,.12);
 }
 
-/* Save status (inside modal bottom) */
-#saveStatus{
+/* Index sidebar */
+.indexPane{
+  border-left: 1px solid var(--line);
+  background: rgba(255,255,255,.01);
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+
+.indexHeader{
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.indexHeader .indexTitle{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+.indexHeader h4{
+  margin:0;
+  font-size:.95rem;
+  letter-spacing:.2px;
+}
+.indexActions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.indexActions .btn{
+  padding:7px 10px;
+  border-radius:10px;
+}
+
+/* Lists */
+.indexLists{
+  flex:1;
+  display:grid;
+  grid-template-rows: 1fr 1fr; /* notebooks | pages */
+  min-height:0;
+}
+
+.indexSection{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+.indexSection + .indexSection{
+  border-top: 1px solid var(--line);
+}
+
+.indexSectionHeader{
+  padding: 10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.indexSectionHeader .label{
+  font-size:.9rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing:.06em;
+}
+
+.indexList{
+  padding: 6px;
+  overflow:auto;
+  min-height:0;
+}
+
+.indexItem{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor:pointer;
+  user-select:none;
+}
+.indexItem:hover{
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.06);
+}
+.indexItem.active{
+  background: var(--accent-soft);
+  border-color: rgba(107,124,147,.45);
+}
+.indexItem .name{
+  flex:1;
+  font-size:.95rem;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.indexItem .meta{
+  font-size:.85rem;
   color: var(--muted);
 }
 
-/* Small screens: modal actions stack nicely */
-@media (max-width: 640px){
-  .modal{ height: min(720px, 92vh); }
-  .modalActions .btn{ width:auto; }
-  #notebookSelect{ width: 100%; min-width: 0; }
+/* Mobile modal */
+@media (max-width: 860px){
+  .modal{ height: min(820px, 92vh); }
+  .notebookBody{
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 320px; /* editor top, index bottom */
+  }
+  .indexPane{
+    border-left:none;
+    border-top: 1px solid var(--line);
+  }
 }
 
-/* Optional: reduce motion preference */
 @media (prefers-reduced-motion: reduce){
   .btn{ transition:none; }
 }
