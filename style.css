@@ -1,121 +1,199 @@
+/* =========================================================
+   Minimal Focus Dark — CSS completo (sustituye tu style.css)
+   - Grises cálidos + acento azul-gris muy suave
+   - Menos distracciones, más legible para foco prolongado
+   ========================================================= */
+
+/* ---------- Theme tokens ---------- */
 :root{
-  --bg:#0b0f19;
-  --panel:#121a2a;
-  --card:#0f1726;
-  --text:#e8ecf4;
-  --muted:#9aa7c0;
+  /* Base */
+  --bg:#0f1115;
+  --panel:#14171d;
+  --card:#171b22;
+  --surface:#1c2028;
+
+  /* Text */
+  --text:#e6e8eb;
+  --muted:#9aa0a6;
+
+  /* Lines / borders */
   --line:rgba(255,255,255,.08);
-  --shadow: 0 18px 40px rgba(0,0,0,.35);
-  --radius:16px;
+
+  /* Accent (subtle) */
+  --accent:#6b7c93;
+  --accent-soft:rgba(107,124,147,.18);
+
+  /* Danger (muted) */
+  --danger:#a65a5a;
+  --danger-soft:rgba(166,90,90,.18);
+
+  /* Shadow / radius */
+  --radius:14px;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+
+  /* Focus ring */
+  --focus:rgba(107,124,147,.55);
 }
 
-*{box-sizing:border-box}
+/* ---------- Global ---------- */
+*{ box-sizing:border-box; }
+html, body{ height:100%; }
 body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: radial-gradient(1200px 700px at 20% 10%, rgba(79,195,247,.15), transparent),
-              radial-gradient(900px 600px at 90% 20%, rgba(142,36,170,.16), transparent),
-              var(--bg);
-  color:var(--text);
+  background: var(--bg);
+  color: var(--text);
 }
 
+.hidden{ display:none !important; }
+.muted{ color: var(--muted); }
+.small{ font-size:.9rem; }
+
+a{ color: var(--text); }
+
+/* ---------- Topbar ---------- */
 .topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:12px;
-  padding:14px 18px;
+  padding:12px 16px;
   border-bottom:1px solid var(--line);
-  background: rgba(10,14,24,.7);
-  backdrop-filter: blur(10px);
+  background: var(--panel);
   position:sticky;
   top:0;
   z-index:1000;
 }
 
-.brand{display:flex; align-items:baseline; gap:10px;}
-.brand .dot{
-  width:10px; height:10px; border-radius:50%;
-  background:#4FC3F7;
-  box-shadow: 0 0 16px rgba(79,195,247,.6);
+.brand{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
 }
-.muted{color:var(--muted)}
-.small{font-size:.9rem}
-.hidden{display:none !important;}
+.brand .dot{
+  width:10px; height:10px;
+  border-radius:50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255,255,255,.04);
+}
 
-.auth{display:flex; align-items:center; gap:10px;}
+.auth{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* ---------- User badge ---------- */
 .userBadge{
-  display:flex; align-items:center; gap:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
   padding:6px 10px;
   border:1px solid var(--line);
   border-radius:999px;
-  background: rgba(255,255,255,.04);
+  background: rgba(255,255,255,.03);
 }
 .userBadge img{
   width:28px; height:28px;
   border-radius:50%;
   border:1px solid var(--line);
 }
-.userName{font-weight:600; font-size:.95rem}
-.userMeta{display:flex; flex-direction:column; line-height:1.1}
+.userMeta{
+  display:flex;
+  flex-direction:column;
+  line-height:1.1;
+}
+.userName{ font-weight:600; font-size:.95rem; }
 
+/* ---------- Buttons ---------- */
 .btn{
   cursor:pointer;
   border:1px solid var(--line);
-  background: rgba(255,255,255,.06);
-  color:var(--text);
-  padding:10px 12px;
-  border-radius:12px;
-  transition: transform .06s ease, background .15s ease;
+  background: var(--surface);
+  color: var(--text);
+  padding:8px 12px;
+  border-radius:10px;
+  transition: background .15s ease, transform .06s ease;
 }
-.btn:hover{background: rgba(255,255,255,.10)}
-.btn:active{transform: translateY(1px)}
+.btn:hover{ background:#20252f; }
+.btn:active{ transform: translateY(1px); }
+
 .btn.primary{
-  background: rgba(79,195,247,.16);
-  border-color: rgba(79,195,247,.35);
+  background: var(--accent-soft);
+  border-color: rgba(107,124,147,.45);
 }
 .btn.danger{
-  background: rgba(244,67,54,.14);
-  border-color: rgba(244,67,54,.35);
+  background: var(--danger-soft);
+  border-color: rgba(166,90,90,.55);
 }
 
+.btn:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+/* ---------- Layout ---------- */
 .layout{
   display:grid;
   grid-template-columns: 320px 1fr;
   gap:14px;
   padding:14px;
-  min-height: calc(100vh - 62px);
+  min-height: calc(100vh - 56px);
 }
 
+@media (max-width: 980px){
+  .layout{ grid-template-columns: 1fr; }
+}
+
+/* ---------- Panel / Cards ---------- */
 .panel{
-  background: rgba(18,26,42,.75);
+  background: var(--panel);
   border:1px solid var(--line);
   border-radius: var(--radius);
   padding:14px;
   box-shadow: var(--shadow);
 }
 
-.panel h2{margin:6px 0 12px 0; font-size:1.2rem}
+.panel h2{
+  margin:6px 0 12px 0;
+  font-size:1.15rem;
+  font-weight:650;
+}
+
 .card{
-  background: rgba(15,23,38,.8);
+  background: var(--card);
   border:1px solid var(--line);
-  border-radius:14px;
+  border-radius:12px;
   padding:12px;
   margin:10px 0;
 }
-.card h3{margin:0 0 10px 0; font-size:1rem}
-.card.danger{border-color: rgba(244,67,54,.25)}
-.card.info{border-color: rgba(79,195,247,.2)}
 
+.card h3{
+  margin:0 0 10px 0;
+  font-size:1rem;
+  font-weight:650;
+}
+
+.card.danger{ border-color: rgba(166,90,90,.35); }
+.card.info{ border-color: rgba(107,124,147,.30); }
+
+/* ---------- Inputs ---------- */
 textarea, select, input[type="file"]{
   width:100%;
   margin-top:6px;
-  background: rgba(255,255,255,.05);
+  background: rgba(255,255,255,.04);
   border:1px solid var(--line);
   color: var(--text);
   padding:10px;
-  border-radius:12px;
+  border-radius:10px;
   outline:none;
+}
+
+textarea::placeholder{ color: rgba(154,160,166,.75); }
+
+textarea:focus, select:focus, input[type="file"]:focus{
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px rgba(107,124,147,.12);
 }
 
 .row{
@@ -124,11 +202,12 @@ textarea, select, input[type="file"]{
   align-items:center;
   margin-top:10px;
 }
-.row > *{flex:1}
-.row .btn{flex:0 0 auto}
+.row > *{ flex:1; }
+.row .btn{ flex:0 0 auto; }
 
+/* ---------- Board wrapper ---------- */
 .boardWrap{
-  background: rgba(18,26,42,.35);
+  background: var(--panel);
   border:1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -136,24 +215,21 @@ textarea, select, input[type="file"]{
   position:relative;
 }
 
+/* ---------- Board ---------- */
 .board{
   position:relative;
   width:100%;
   height: calc(100vh - 92px);
-  background:
-    radial-gradient(900px 700px at 20% 20%, rgba(255,183,0,.08), transparent),
-    radial-gradient(700px 600px at 70% 30%, rgba(244,67,54,.06), transparent),
-    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)),
-    #0e1524;
+  background: #12151b;
 }
 
+/* Optional subtle grid (very quiet) */
 .board::before{
   content:"";
   position:absolute; inset:0;
-  background-image:
-    radial-gradient(circle at 1px 1px, rgba(255,255,255,.06) 1px, transparent 0);
-  background-size: 28px 28px;
-  opacity:.4;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.04) 1px, transparent 0);
+  background-size: 34px 34px;
+  opacity:.25;
   pointer-events:none;
 }
 
@@ -163,28 +239,30 @@ textarea, select, input[type="file"]{
   display:flex;
   align-items:center;
   justify-content:center;
-  color: rgba(154,167,192,.9);
-  font-size:1.05rem;
+  color: rgba(154,160,166,.9);
+  font-size:1.02rem;
   text-align:center;
   padding:20px;
   pointer-events:none;
 }
 
+/* ---------- Items ---------- */
 .item{
   position:absolute;
   user-select:none;
   cursor:grab;
-  border-radius:14px;
-  box-shadow: 0 18px 30px rgba(0,0,0,.35);
-  border:1px solid rgba(0,0,0,.18);
+  border-radius:12px;
+  box-shadow: 0 12px 24px rgba(0,0,0,.35);
+  border:1px solid rgba(255,255,255,.06);
 }
-.item:active{cursor:grabbing}
+.item:active{ cursor:grabbing; }
 
 .item.selected{
-  outline: 2px solid rgba(79,195,247,.65);
-  outline-offset: 2px;
+  outline:2px solid var(--focus);
+  outline-offset:2px;
 }
 
+/* Notes (keep readable) */
 .note{
   width: 220px;
   min-height: 140px;
@@ -198,8 +276,8 @@ textarea, select, input[type="file"]{
   width:10px; height:10px;
   transform: translateX(-50%);
   border-radius:50%;
-  background: #F44336;
-  box-shadow: 0 6px 18px rgba(244,67,54,.45);
+  background: rgba(255,255,255,.35);
+  box-shadow: 0 6px 14px rgba(0,0,0,.35);
 }
 
 .note .content{
@@ -209,20 +287,22 @@ textarea, select, input[type="file"]{
   color: rgba(20,20,20,.92);
 }
 
-.note.yellow{background: #fff4a6}
-.note.pink{background: #ffd0e3}
-.note.blue{background: #bfe7ff}
-.note.green{background: #c8ffd6}
+/* Keep your color notes (optional) */
+.note.yellow{ background:#fff4a6; }
+.note.pink{ background:#ffd0e3; }
+.note.blue{ background:#bfe7ff; }
+.note.green{ background:#c8ffd6; }
 .note.paper{
-  background: #f2efe8;
-  border-color: rgba(0,0,0,.12);
+  background:#f2efe8;
+  border-color: rgba(0,0,0,.10);
 }
 
+/* Photos */
 .photo{
   width: 260px;
   height: 180px;
   overflow:hidden;
-  background: #111;
+  background:#0b0d12;
   transform: rotate(var(--rot));
 }
 .photo img{
@@ -237,16 +317,17 @@ textarea, select, input[type="file"]{
   width:12px; height:12px;
   transform: translateX(-50%);
   border-radius:50%;
-  background: #FFB300;
-  box-shadow: 0 6px 18px rgba(255,179,0,.45);
+  background: rgba(107,124,147,.85);
+  box-shadow: 0 6px 14px rgba(0,0,0,.35);
 }
 
+/* ---------- Toast ---------- */
 .toast{
   position: fixed;
   left: 50%;
   bottom: 18px;
   transform: translateX(-50%);
-  background: rgba(0,0,0,.75);
+  background: rgba(10,12,16,.92);
   border:1px solid var(--line);
   color: var(--text);
   padding:10px 14px;
@@ -254,21 +335,23 @@ textarea, select, input[type="file"]{
   box-shadow: var(--shadow);
   z-index: 2000;
 }
+
+/* ---------- KBD ---------- */
 kbd{
-  background: rgba(255,255,255,.08);
+  background: rgba(255,255,255,.06);
   border: 1px solid var(--line);
-  border-bottom-color: rgba(255,255,255,.18);
   padding: 2px 6px;
   border-radius: 8px;
   font-size: .9em;
 }
 
-/* ===== Notebook Modal ===== */
+/* =========================================================
+   Notebook Modal
+   ========================================================= */
 .overlay{
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.55);
-  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,.60);
   z-index: 3000;
   display: flex;
   align-items: center;
@@ -277,40 +360,64 @@ kbd{
 }
 
 .modal{
-  width: min(920px, 96vw);
-  height: min(640px, 86vh);
-  background: rgba(15,23,38,.92);
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 20px;
+  width: min(980px, 96vw);
+  height: min(680px, 88vh);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
   box-shadow: 0 25px 70px rgba(0,0,0,.55);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
+/* top & bottom bars */
 .modalTop, .modalBottom{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap: 10px;
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.03);
+  background: rgba(255,255,255,.02);
 }
-.modalBottom{
-  border-bottom: none;
-  border-top: 1px solid rgba(255,255,255,.08);
+.modalTop{ border-bottom: 1px solid var(--line); }
+.modalBottom{ border-top: 1px solid var(--line); }
+
+.modalTitle{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
-.modalTitle{display:flex; align-items:baseline; gap:10px;}
-.modalActions{display:flex; gap:10px; align-items:center;}
+.modalActions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
 
+/* Notebook selector row inside modal title area */
+.notebookBar{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  width:100%;
+  margin-top:8px;
+}
+
+#notebookSelect{
+  min-width: 220px;
+}
+
+/* Tabs */
 .tabsBar{
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid var(--line);
   overflow-x: auto;
+  background: rgba(255,255,255,.01);
 }
-
 .tabs{
   display:flex;
   gap: 8px;
@@ -321,18 +428,20 @@ kbd{
   flex: 0 0 auto;
   padding: 8px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.05);
-  color: rgba(232,236,244,.92);
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.03);
+  color: rgba(230,232,235,.92);
   cursor: pointer;
   font-size: .92rem;
   user-select:none;
 }
+.tab:hover{ background: rgba(255,255,255,.06); }
 .tab.active{
-  background: rgba(79,195,247,.18);
-  border-color: rgba(79,195,247,.35);
+  background: var(--accent-soft);
+  border-color: rgba(107,124,147,.45);
 }
 
+/* Editor area */
 .pageArea{
   flex:1;
   padding: 12px;
@@ -343,97 +452,38 @@ kbd{
   width: 100%;
   height: 100%;
   resize: none;
-  border-radius: 16px;
-  background: rgba(0,0,0,.22);
-  border: 1px solid rgba(255,255,255,.10);
-  color: rgba(232,236,244,.95);
-  padding: 14px;
+  border-radius: 12px;
+  background: #0e1117;
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 16px;
   outline: none;
-  line-height: 1.35;
+  line-height: 1.6;
   font-size: 1rem;
 }
 
-/* =========================
-   NOTEBOOK FIXES (override)
-   ========================= */
-
-/* 1) Evita que los .row globales destruyan layouts especiales dentro del modal */
-#notebookModal .row > * {
-  flex: 0 0 auto;
+.pageEditor::placeholder{
+  color: rgba(154,160,166,.70);
 }
 
-/* 2) Barra del selector de libreta: que se entienda y haga wrap bien */
-#notebookModal .row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+.pageEditor:focus{
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px rgba(107,124,147,.12);
 }
 
-/* El select debe crecer, pero no aplastar todo */
-#notebookSelect{
-  flex: 1 1 260px;
-  min-width: 240px;
-  max-width: 520px;
+/* Save status (inside modal bottom) */
+#saveStatus{
+  color: var(--muted);
 }
 
-/* Botones del row de libretas */
-#btnNewNotebook,
-#btnRenameNotebook,
-#btnDeleteNotebook{
-  flex: 0 0 auto;
-  white-space: nowrap;
+/* Small screens: modal actions stack nicely */
+@media (max-width: 640px){
+  .modal{ height: min(720px, 92vh); }
+  .modalActions .btn{ width:auto; }
+  #notebookSelect{ width: 100%; min-width: 0; }
 }
 
-/* 3) ModalTop: título y acciones mejor alineados */
-.modalTop{
-  flex-wrap: wrap;
-  align-items: center;
+/* Optional: reduce motion preference */
+@media (prefers-reduced-motion: reduce){
+  .btn{ transition:none; }
 }
-
-.modalTitle{
-  display:flex;
-  flex-direction: column; /* en vez de baseline horizontal */
-  align-items: flex-start;
-  gap: 4px;
-  min-width: 220px;
-}
-
-/* 4) iOS/Chrome: arregla "textarea no aparece" en flex */
-.modal{
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.pageArea{
-  flex: 1 1 auto;
-  min-height: 0;   /* CLAVE para iOS flex */
-  overflow: hidden;
-}
-
-.pageEditor{
-  height: 100%;
-  min-height: 240px; /* fallback visual */
-}
-
-/* 5) Tabs: que no se oculten ni se rompan raro */
-.tabsBar{
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* 6) Responsive: en pantallas pequeñas, botones a full-width si hace falta */
-@media (max-width: 560px){
-  #notebookSelect{ flex: 1 1 100%; max-width: none; }
-  #btnNewNotebook,
-  #btnRenameNotebook,
-  #btnDeleteNotebook{ width: 100%; }
-}
-
-#notebookSelect{
-  appearance: none;
-  cursor: pointer;
-}
-
