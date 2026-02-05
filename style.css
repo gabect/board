@@ -553,3 +553,78 @@ kbd{
   border-top: 1px solid var(--line);
 }
 
+.modalBodySplit{
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 12px;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.indexPanel{
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  background: rgba(255,255,255,.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.indexHeader{
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.indexActions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.indexSection{
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.indexList{
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.indexFooter{
+  margin-top: 10px;
+  display:flex;
+  justify-content:flex-end;
+}
+
+.indexStatus{
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.02);
+}
+
+.editorPanel{
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(0,0,0,.12);
+}
+
+.editorPanel .pageEditor{
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 16px;
+  resize: none;
+}
+
+
