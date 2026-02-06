@@ -1301,7 +1301,7 @@ html[data-theme="day"]{
 }
 
 /* CORK: “for fun” (puedes refinar luego) */
-html[data-theme="cork"]{
+html[data-theme="theme-cork"]{
   --bg:#e7dfcf;
   --panel:rgba(255,255,255,.85);
   --card:rgba(255,255,255,.78);
@@ -1310,6 +1310,163 @@ html[data-theme="cork"]{
   --line:rgba(0,0,0,.18);
   --shadow: 0 18px 40px rgba(0,0,0,.20);
 }
+
+/* =========================================================
+   THEME: Corkboard (just for fun)
+   Activa con: <body class="theme-cork">
+   ========================================================= */
+
+body.theme-cork{
+  background:
+    radial-gradient(1200px 700px at 20% 10%, rgba(0,0,0,.10), transparent 55%),
+    radial-gradient(900px 600px at 90% 20%, rgba(0,0,0,.12), transparent 55%),
+    linear-gradient(180deg, #c7c1b6, #a8a196);
+  color: #1b1b1b;
+}
+
+/* Topbar como madera */
+body.theme-cork .topbar{
+  background: rgba(0,0,0,.15);
+  border-bottom: 1px solid rgba(0,0,0,.20);
+  backdrop-filter: blur(6px);
+}
+
+body.theme-cork .brand strong{
+  display:inline-block;
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0,0,0,.35);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.12)),
+    repeating-linear-gradient(90deg, #7a4d2a 0 14px, #6b4225 14px 28px);
+  border: 1px solid rgba(0,0,0,.25);
+  box-shadow: 0 10px 22px rgba(0,0,0,.25);
+}
+
+/* Panel izquierdo un poco “papel” */
+body.theme-cork .panel{
+  background: rgba(255,255,255,.35);
+  border: 1px solid rgba(0,0,0,.18);
+  box-shadow: 0 12px 30px rgba(0,0,0,.18);
+}
+
+body.theme-cork .card{
+  background: rgba(255,255,255,.45);
+  border: 1px solid rgba(0,0,0,.16);
+}
+
+/* Botones tipo “plástico” */
+body.theme-cork .btn{
+  background: rgba(255,255,255,.65);
+  border: 1px solid rgba(0,0,0,.18);
+  color: #121212;
+}
+body.theme-cork .btn:hover{ background: rgba(255,255,255,.85); }
+body.theme-cork .btn.primary{
+  background: rgba(60,120,255,.20);
+  border-color: rgba(60,120,255,.35);
+}
+body.theme-cork .btn.danger{
+  background: rgba(255,70,70,.18);
+  border-color: rgba(255,70,70,.35);
+}
+
+/* El tablero: corcho + marco */
+body.theme-cork .boardWrap{
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,.35);
+  box-shadow: 0 25px 70px rgba(0,0,0,.25);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.10));
+  padding: 14px; /* crea “marco” */
+}
+
+/* Corcho */
+body.theme-cork .board{
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.30);
+  background:
+    radial-gradient(circle at 1px 1px, rgba(0,0,0,.07) 1px, transparent 0) 0 0 / 22px 22px,
+    radial-gradient(900px 700px at 20% 20%, rgba(255,255,255,.12), transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.10)),
+    #caa26a;
+}
+
+body.theme-cork .board::before{ display:none; } /* apaga grid del tema minimal */
+
+/* Hint sobre corcho */
+body.theme-cork .boardHint{
+  color: rgba(30,20,10,.80);
+  text-shadow: 0 1px 0 rgba(255,255,255,.25);
+}
+
+/* Items: más “papel real” */
+body.theme-cork .item{
+  border: 1px solid rgba(0,0,0,.20);
+  box-shadow: 0 18px 35px rgba(0,0,0,.25);
+}
+
+/* Notas como post-it */
+body.theme-cork .note{
+  border-radius: 8px;
+  padding: 14px 12px 18px 12px;
+  filter: saturate(1.05);
+}
+
+/* Textito más “tinta” */
+body.theme-cork .note .content{
+  color: rgba(20,12,8,.88);
+  font-weight: 600;
+}
+
+/* Pin con brillo */
+body.theme-cork .note .pin,
+body.theme-cork .photo .pin{
+  border: 1px solid rgba(0,0,0,.20);
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+/* Variantes de papel más “orgánico” */
+body.theme-cork .note.yellow{ background: #fff2a8; }
+body.theme-cork .note.pink{ background: #ffd0dd; }
+body.theme-cork .note.blue{ background: #bfe7ff; }
+body.theme-cork .note.green{ background: #c9ffd6; }
+body.theme-cork .note.paper{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.65), rgba(0,0,0,.02)),
+    #f2efe8;
+}
+
+/* Fotos tipo polaroid */
+body.theme-cork .photo{
+  background: #f7f7f7;
+  border-radius: 10px;
+  padding: 10px 10px 18px 10px; /* “borde polaroid” */
+}
+body.theme-cork .photo img{
+  border-radius: 8px;
+}
+
+/* Modal libreta: estilo “papel” encima de corcho */
+body.theme-cork .overlay{
+  background: rgba(0,0,0,.45);
+}
+
+body.theme-cork .modal{
+  background: rgba(245,242,236,.92);
+  border: 1px solid rgba(0,0,0,.18);
+  color: #1b1b1b;
+}
+
+body.theme-cork .pageEditor{
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(0,0,0,.15);
+  color: #111;
+}
+
 
 /* (opcional) fondo tipo corcho en modo cork */
 html[data-theme="cork"] body{
