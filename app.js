@@ -1,5 +1,5 @@
 // app.js (ESM) — GitHub Pages + Firebase (Board + Multi-Notebooks + Pages)
-// UI: índice a la derecha (notebookList + pageList)
+// UI: índice (notebookList + pageList) dentro del MODAL
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
@@ -20,9 +20,6 @@ import {
   writeBatch,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-
-
 
 // =========================
 // 1) Firebase config
@@ -68,6 +65,8 @@ const btnAddImage = document.getElementById("btnAddImage");
 const btnClear = document.getElementById("btnClear");
 const toast = document.getElementById("toast");
 
+const btnTheme = document.getElementById("btnTheme");
+
 // =========================
 // 4) DOM refs (Notebook modal)
 // =========================
@@ -81,12 +80,12 @@ const btnDeletePage = document.getElementById("btnDeletePage");
 const pageEditor = document.getElementById("pageEditor");
 const saveStatus = document.getElementById("saveStatus");
 
-// Índice derecho (nuevo UI)
+// Índice (en el modal)
 const notebookList = document.getElementById("notebookList");
 const pageList = document.getElementById("pageList");
 const activeContextLabel = document.getElementById("activeContextLabel");
 
-// Acciones libretas
+// Acciones libretas (en el modal)
 const btnNewNotebook = document.getElementById("btnNewNotebook");
 const btnRenameNotebook = document.getElementById("btnRenameNotebook");
 const btnDeleteNotebook = document.getElementById("btnDeleteNotebook");
@@ -170,29 +169,14 @@ function setContextLabel() {
 // =========================
 // 7) Firestore paths
 // =========================
-// Board items: users/{uid}/items/{itemId}
-function itemsCol(uid) {
-  return collection(db, "users", uid, "items");
-}
-function itemDoc(uid, itemId) {
-  return doc(db, "users", uid, "items", itemId);
-}
+function itemsCol(uid) { return collection(db, "users", uid, "items"); }
+function itemDoc(uid, itemId) { return doc(db, "users", uid, "items", itemId); }
 
-// Notebooks: users/{uid}/notebooks/{notebookId}
-function notebooksCol(uid) {
-  return collection(db, "users", uid, "notebooks");
-}
-function notebookDoc(uid, notebookId) {
-  return doc(db, "users", uid, "notebooks", notebookId);
-}
+function notebooksCol(uid) { return collection(db, "users", uid, "notebooks"); }
+function notebookDoc(uid, notebookId) { return doc(db, "users", uid, "notebooks", notebookId); }
 
-// Pages: users/{uid}/notebooks/{notebookId}/pages/{pageId}
-function pagesCol(uid, notebookId) {
-  return collection(db, "users", uid, "notebooks", notebookId, "pages");
-}
-function pageDoc(uid, notebookId, pageId) {
-  return doc(db, "users", uid, "notebooks", notebookId, "pages", pageId);
-}
+function pagesCol(uid, notebookId) { return collection(db, "users", uid, "notebooks", notebookId, "pages"); }
+function pageDoc(uid, notebookId, pageId) { return doc(db, "users", uid, "notebooks", notebookId, "pages", pageId); }
 
 // =========================
 // 8) Board DOM elements
@@ -394,7 +378,6 @@ async function loadBoard() {
   const snap = await getDocs(itemsCol(currentUser.uid));
   const items = [];
   snap.forEach((d) => items.push(d.data()));
-
   items.sort((a, b) => (a.z || 0) - (b.z || 0));
 
   for (const item of items) {
@@ -430,7 +413,7 @@ async function clearAll() {
 }
 
 // =========================
-// 11) Notebook UI rendering (index lists)
+// 11) Notebook UI rendering
 // =========================
 function renderNotebookList() {
   if (!notebookList) return;
@@ -443,7 +426,6 @@ function renderNotebookList() {
     const name = document.createElement("div");
     name.className = "name";
     name.textContent = nb.title || "Libreta";
-
     row.appendChild(name);
 
     row.addEventListener("click", async () => {
@@ -473,7 +455,6 @@ function renderPageList() {
     const name = document.createElement("div");
     name.className = "name";
     name.textContent = p.title || "Página";
-
     row.appendChild(name);
 
     row.addEventListener("click", async () => {
@@ -511,7 +492,6 @@ async function loadNotebooks() {
 
   const snap = await getDocs(notebooksCol(currentUser.uid));
   snap.forEach(d => notebooks.push(d.data()));
-
   notebooks.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
   const preferred = localStorage.getItem(lsKey("activeNotebookId"));
@@ -542,11 +522,10 @@ async function loadPagesForActiveNotebook() {
 
   const snap = await getDocs(pagesCol(currentUser.uid, activeNotebookId));
   snap.forEach(d => notebookPages.push(d.data()));
-
   notebookPages.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
   if (notebookPages.length === 0) {
-    await createNewPage(); // crea primera página
+    await createNewPage();
     return;
   }
 
@@ -578,12 +557,7 @@ async function createNotebook(defaultTitle = null) {
   if (!title) return;
 
   const id = genId();
-  const nb = {
-    id,
-    title,
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  };
+  const nb = { id, title, createdAt: Date.now(), updatedAt: Date.now() };
 
   await setDoc(notebookDoc(currentUser.uid, id), nb);
   notebooks.unshift(nb);
@@ -634,16 +608,13 @@ async function deleteActiveNotebook() {
 
   clearTimeout(saveTimer);
 
-  // borrar páginas
   const pagesSnap = await getDocs(pagesCol(currentUser.uid, activeNotebookId));
   const pageRefs = [];
   pagesSnap.forEach(d => pageRefs.push(d.ref));
   await batchDeleteByRefs(pageRefs);
 
-  // borrar notebook doc
   await deleteDoc(notebookDoc(currentUser.uid, activeNotebookId));
 
-  // limpiar local
   notebooks = notebooks.filter(n => n.id !== activeNotebookId);
   activeNotebookId = null;
   notebookPages = [];
@@ -670,13 +641,7 @@ async function createNewPage() {
 
   const id = genId();
   const title = `Página ${notebookPages.length + 1}`;
-  const page = {
-    id,
-    title,
-    content: "",
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  };
+  const page = { id, title, content: "", createdAt: Date.now(), updatedAt: Date.now() };
 
   await setDoc(pageDoc(currentUser.uid, activeNotebookId, id), page);
   notebookPages.unshift(page);
@@ -847,29 +812,15 @@ board?.addEventListener("mousedown", (e) => {
   if (e.target === board) setSelected(null);
 });
 
-// Notebook modal
 btnNotebook?.addEventListener("click", openNotebook);
 btnCloseNotebook?.addEventListener("click", closeNotebook);
 
-btnNewPage?.addEventListener("click", async () => {
-  await createNewPage();
-});
+btnNewPage?.addEventListener("click", createNewPage);
+btnDeletePage?.addEventListener("click", deleteActivePage);
 
-btnDeletePage?.addEventListener("click", async () => {
-  await deleteActivePage();
-});
-
-btnNewNotebook?.addEventListener("click", async () => {
-  await createNotebook();
-});
-
-btnRenameNotebook?.addEventListener("click", async () => {
-  await renameActiveNotebook();
-});
-
-btnDeleteNotebook?.addEventListener("click", async () => {
-  await deleteActiveNotebook();
-});
+btnNewNotebook?.addEventListener("click", () => createNotebook());
+btnRenameNotebook?.addEventListener("click", renameActiveNotebook);
+btnDeleteNotebook?.addEventListener("click", deleteActiveNotebook);
 
 notebookOverlay?.addEventListener("mousedown", (e) => {
   if (e.target === notebookOverlay) closeNotebook();
@@ -881,48 +832,53 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-// Autosave typing
 pageEditor?.addEventListener("input", () => {
   if (!currentUser) return;
   if (!activeNotebookId || !activePageId) return;
   scheduleSave();
 });
+
 // =========================
-// Theme switch (dark/day/cork) — SAFE for iOS WebKit
+// 17) Theme toggle (CLASS-BASED) — minimal/day/cork
 // =========================
-const btnTheme = document.getElementById("btnTheme");
-const THEMES = ["dark", "day", "cork"];
+const THEMES = ["minimal", "day", "cork"];
 
 function safeGet(key) {
-  try { return localStorage.getItem(key); }
-  catch { return null; }
+  try { return localStorage.getItem(key); } catch { return null; }
 }
 function safeSet(key, value) {
-  try { localStorage.setItem(key, value); }
-  catch { /* ignore: storage blocked */ }
+  try { localStorage.setItem(key, value); } catch { /* ignore */ }
+}
+
+function applyTheme(t) {
+  // Limpia clases previas
+  document.body.classList.remove("theme-day", "theme-cork");
+
+  if (t === "day") document.body.classList.add("theme-day");
+  if (t === "cork") document.body.classList.add("theme-cork");
+
+  safeSet("board.theme", t);
+
+  if (btnTheme) {
+    const label = t === "minimal" ? "Minimal" : (t === "day" ? "Day" : "Cork");
+    btnTheme.textContent = `🎨 ${label}`;
+  }
 }
 
 function getTheme() {
-  return safeGet("ui.theme") || "dark";
-}
-
-function setTheme(t) {
-  document.documentElement.setAttribute("data-theme", t);
-  safeSet("ui.theme", t);
-  if (btnTheme) btnTheme.textContent = `Tema: ${t}`;
+  const t = safeGet("board.theme") || "minimal";
+  return THEMES.includes(t) ? t : "minimal";
 }
 
 function cycleTheme() {
   const current = getTheme();
   const i = THEMES.indexOf(current);
   const next = THEMES[(i + 1) % THEMES.length];
-  setTheme(next);
+  applyTheme(next);
 }
 
-// init theme on load (safe)
-setTheme(getTheme());
+// init theme
+applyTheme(getTheme());
 
-// click handler
+// click
 btnTheme?.addEventListener("click", cycleTheme);
-
-
