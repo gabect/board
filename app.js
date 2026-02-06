@@ -21,33 +21,7 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-// =========================
-// Theme switch (dark/day/cork)
-// =========================
-const btnTheme = document.getElementById("btnTheme");
-const THEMES = ["dark", "day", "cork"];
 
-function getTheme() {
-  return localStorage.getItem("ui.theme") || "dark";
-}
-function setTheme(t) {
-  document.documentElement.setAttribute("data-theme", t);
-  localStorage.setItem("ui.theme", t);
-  if (btnTheme) btnTheme.textContent = `Tema: ${t}`;
-}
-
-function cycleTheme() {
-  const current = getTheme();
-  const i = THEMES.indexOf(current);
-  const next = THEMES[(i + 1) % THEMES.length];
-  setTheme(next);
-}
-
-// init theme on load
-setTheme(getTheme());
-
-// click handler
-btnTheme?.addEventListener("click", cycleTheme);
 
 
 // =========================
@@ -930,3 +904,31 @@ function toggleTheme() {
 applyThemeFromStorage();
 btnTheme?.addEventListener("click", toggleTheme);
 
+
+// =========================
+// Theme switch (dark/day/cork)
+// =========================
+const btnTheme = document.getElementById("btnTheme");
+const THEMES = ["dark", "day", "cork"];
+
+function getTheme() {
+  return localStorage.getItem("ui.theme") || "dark";
+}
+function setTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("ui.theme", t);
+  if (btnTheme) btnTheme.textContent = `Tema: ${t}`;
+}
+
+function cycleTheme() {
+  const current = getTheme();
+  const i = THEMES.indexOf(current);
+  const next = THEMES[(i + 1) % THEMES.length];
+  setTheme(next);
+}
+
+// init theme on load
+setTheme(getTheme());
+
+// click handler
+btnTheme?.addEventListener("click", cycleTheme);
