@@ -1,6 +1,4 @@
-// app.js (ESM) — GitHub Pages + Firebase (Board + Multi-Notebooks + Pages)
-// UI: índice (notebookList + pageList) dentro del MODAL
-
+// app.js (ESM) — GitHub Pages + Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
@@ -22,7 +20,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 // =========================
-// 1) Firebase config
+// Firebase config
 // =========================
 const firebaseConfig = {
   apiKey: "AIzaSyA3KERRbb2kWbAWOGCg2Pg_P2-zbIeIECU",
@@ -34,21 +32,26 @@ const firebaseConfig = {
   measurementId: "G-4ELQ6D88G1"
 };
 
-// =========================
-// 2) Init Firebase
-// =========================
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 // =========================
-// 3) DOM refs (Board)
+// Safe storage
+// =========================
+function safeGet(key){
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+function safeSet(key, val){
+  try { localStorage.setItem(key, val); } catch {}
+}
+
+// =========================
+// DOM
 // =========================
 const board = document.getElementById("board");
 const boardHint = document.getElementById("boardHint");
-
-const btnLoginGoogle = document.getElementById("btnLoginGoogle");
-const btnLogout = document.getElementById("btnLogout");
+const toast = document.getElementById("toast");
 
 const userBadge = document.getElementById("userBadge");
 const userPhoto = document.getElementById("userPhoto");
@@ -57,131 +60,123 @@ const userEmail = document.getElementById("userEmail");
 
 const noteText = document.getElementById("noteText");
 const noteColor = document.getElementById("noteColor");
-const btnAddNote = document.getElementById("btnAddNote");
-
 const imgFile = document.getElementById("imgFile");
-const btnAddImage = document.getElementById("btnAddImage");
 
-const btnClear = document.getElementById("btnClear");
-const toast = document.getElementById("toast");
+const lnkAddNote = document.getElementById("lnkAddNote");
+const lnkAddImage = document.getElementById("lnkAddImage");
+const lnkClear = document.getElementById("lnkClear");
 
-const btnTheme = document.getElementById("btnTheme");
+const lnkTheme = document.getElementById("lnkTheme");
+const lnkNotebook = document.getElementById("lnkNotebook");
+const lnkLoginGoogle = document.getElementById("lnkLoginGoogle");
+const lnkLogout = document.getElementById("lnkLogout");
 
-// =========================
-// 4) DOM refs (Notebook modal)
-// =========================
-const btnNotebook = document.getElementById("btnNotebook");
+// Modal
 const notebookOverlay = document.getElementById("notebookOverlay");
-const btnCloseNotebook = document.getElementById("btnCloseNotebook");
-
-const btnNewPage = document.getElementById("btnNewPage");
-const btnDeletePage = document.getElementById("btnDeletePage");
-
+const treeRoot = document.getElementById("treeRoot");
 const pageEditor = document.getElementById("pageEditor");
 const saveStatus = document.getElementById("saveStatus");
-
-// Índice (en el modal)
-const notebookList = document.getElementById("notebookList");
-const pageList = document.getElementById("pageList");
 const activeContextLabel = document.getElementById("activeContextLabel");
 
-// Acciones libretas (en el modal)
-const btnNewNotebook = document.getElementById("btnNewNotebook");
-const btnRenameNotebook = document.getElementById("btnRenameNotebook");
-const btnDeleteNotebook = document.getElementById("btnDeleteNotebook");
+const lnkNewNotebook = document.getElementById("lnkNewNotebook");
+const lnkNewPage = document.getElementById("lnkNewPage");
+const lnkDeletePage = document.getElementById("lnkDeletePage");
+const lnkCloseNotebook = document.getElementById("lnkCloseNotebook");
 
 // =========================
-// 5) State
+// State
 // =========================
 let currentUser = null;
 let selectedEl = null;
 let zCounter = 10;
 
-let notebooks = [];           // [{id,title,createdAt,updatedAt}]
+let notebooks = [];        // [{id,title,createdAt,updatedAt}]
+let pagesByNotebook = {};  // { [nbId]: [{id,title,content,order,createdAt,updatedAt}] }
+
 let activeNotebookId = null;
-
-let notebookPages = [];       // [{id,title,content,createdAt,updatedAt}]
 let activePageId = null;
-
 let saveTimer = null;
 
 // =========================
-// 6) Helpers UI
+// Helpers UI
 // =========================
-function showToast(msg) {
-  if (!toast) return;
+function showToast(msg){
+  if(!toast) return;
   toast.textContent = msg;
   toast.classList.remove("hidden");
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => toast.classList.add("hidden"), 2200);
+  showToast._t = setTimeout(()=>toast.classList.add("hidden"), 2200);
 }
 
-function requireAuth() {
-  if (!currentUser) {
+function requireAuth(){
+  if(!currentUser){
     showToast("Primero inicia sesión.");
     return false;
   }
   return true;
 }
 
-function genId() {
-  return crypto.randomUUID();
-}
+function genId(){ return crypto.randomUUID(); }
+function randRot(){ return `${(Math.random()*10-5).toFixed(2)}deg`; }
+function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
+function boardRect(){ return board.getBoundingClientRect(); }
 
-function randRot() {
-  const deg = (Math.random() * 10 - 5).toFixed(2);
-  return `${deg}deg`;
-}
-
-function clamp(v, min, max) {
-  return Math.max(min, Math.min(max, v));
-}
-
-function boardRect() {
-  return board.getBoundingClientRect();
-}
-
-function setSelected(el) {
-  if (selectedEl && selectedEl !== el) selectedEl.classList.remove("selected");
+function setSelected(el){
+  if(selectedEl && selectedEl !== el) selectedEl.classList.remove("selected");
   selectedEl = el;
-  if (selectedEl) selectedEl.classList.add("selected");
+  if(selectedEl) selectedEl.classList.add("selected");
 }
+function bringToFront(el){ zCounter += 1; el.style.zIndex = String(zCounter); }
 
-function bringToFront(el) {
-  zCounter += 1;
-  el.style.zIndex = String(zCounter);
-}
-
-function lsKey(name) {
+function lsKey(name){
   const uid = currentUser?.uid || "anon";
   return `board.${uid}.${name}`;
 }
 
-function setContextLabel() {
-  if (!activeContextLabel) return;
-  const nb = notebooks.find(n => n.id === activeNotebookId);
-  const pg = notebookPages.find(p => p.id === activePageId);
-  const nbTitle = nb?.title || "—";
-  const pgTitle = pg?.title || "—";
-  activeContextLabel.textContent = `${nbTitle} / ${pgTitle}`;
+function setContextLabel(){
+  if(!activeContextLabel) return;
+  const nb = notebooks.find(n=>n.id===activeNotebookId);
+  const pages = pagesByNotebook[activeNotebookId] || [];
+  const pg = pages.find(p=>p.id===activePageId);
+  activeContextLabel.textContent = `${nb?.title || "—"} / ${pg?.title || "—"}`;
 }
 
 // =========================
-// 7) Firestore paths
+// Firestore paths
 // =========================
-function itemsCol(uid) { return collection(db, "users", uid, "items"); }
-function itemDoc(uid, itemId) { return doc(db, "users", uid, "items", itemId); }
+function itemsCol(uid){ return collection(db, "users", uid, "items"); }
+function itemDoc(uid, itemId){ return doc(db, "users", uid, "items", itemId); }
 
-function notebooksCol(uid) { return collection(db, "users", uid, "notebooks"); }
-function notebookDoc(uid, notebookId) { return doc(db, "users", uid, "notebooks", notebookId); }
+function notebooksCol(uid){ return collection(db, "users", uid, "notebooks"); }
+function notebookDoc(uid, notebookId){ return doc(db, "users", uid, "notebooks", notebookId); }
 
-function pagesCol(uid, notebookId) { return collection(db, "users", uid, "notebooks", notebookId, "pages"); }
-function pageDoc(uid, notebookId, pageId) { return doc(db, "users", uid, "notebooks", notebookId, "pages", pageId); }
+function pagesCol(uid, notebookId){ return collection(db, "users", uid, "notebooks", notebookId, "pages"); }
+function pageDoc(uid, notebookId, pageId){ return doc(db, "users", uid, "notebooks", notebookId, "pages", pageId); }
 
 // =========================
-// 8) Board DOM elements
+// Theme (day/night/matrix)
 // =========================
-function createNoteElement(item) {
+const THEMES = ["day", "night", "matrix"];
+function getTheme(){ return safeGet("ui.theme") || "night"; }
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  safeSet("ui.theme", t);
+  if(lnkTheme) lnkTheme.textContent = `Tema: ${t}`;
+}
+function cycleTheme(e){
+  e?.preventDefault();
+  const cur = getTheme();
+  const i = THEMES.indexOf(cur);
+  const next = THEMES[(i+1) % THEMES.length];
+  setTheme(next);
+}
+setTheme(getTheme());
+lnkTheme?.addEventListener("click", cycleTheme);
+
+// =========================
+// Board DOM elements
+// =========================
+function createNoteElement(item){
   const el = document.createElement("div");
   el.className = `item note ${item.color || "yellow"}`;
   el.dataset.id = item.id;
@@ -198,22 +193,21 @@ function createNoteElement(item) {
   content.className = "content";
   content.textContent = item.text || "";
 
-  el.appendChild(pin);
-  el.appendChild(content);
+  el.append(pin, content);
 
-  el.addEventListener("dblclick", async () => {
-    if (!requireAuth()) return;
+  el.addEventListener("dblclick", async ()=>{
+    if(!requireAuth()) return;
     const next = prompt("Editar nota:", content.textContent);
-    if (next === null) return;
+    if(next === null) return;
     content.textContent = next;
-    await setDoc(itemDoc(currentUser.uid, item.id), { text: next }, { merge: true });
+    await setDoc(itemDoc(currentUser.uid, item.id), { text: next }, { merge:true });
   });
 
   attachDragHandlers(el);
   return el;
 }
 
-function createPhotoElement(item) {
+function createPhotoElement(item){
   const el = document.createElement("div");
   el.className = "item photo";
   el.dataset.id = item.id;
@@ -230,38 +224,30 @@ function createPhotoElement(item) {
   img.alt = "pinned";
   img.src = item.dataUrl || "";
 
-  el.appendChild(pin);
-  el.appendChild(img);
+  el.append(pin, img);
 
   attachDragHandlers(el);
   return el;
 }
 
-// =========================
-// 9) Drag & drop (Board)
-// =========================
-function attachDragHandlers(el) {
-  let dragging = false;
-  let offsetX = 0;
-  let offsetY = 0;
+// Drag handlers
+function attachDragHandlers(el){
+  let dragging=false, offsetX=0, offsetY=0;
 
-  el.addEventListener("mousedown", (e) => {
-    if (!currentUser) return;
-    dragging = true;
-
+  el.addEventListener("mousedown", (e)=>{
+    if(!currentUser) return;
+    dragging=true;
     setSelected(el);
     bringToFront(el);
 
     const r = el.getBoundingClientRect();
     offsetX = e.clientX - r.left;
     offsetY = e.clientY - r.top;
-
     e.preventDefault();
   });
 
-  window.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
-
+  window.addEventListener("mousemove", (e)=>{
+    if(!dragging) return;
     const br = boardRect();
     const w = el.offsetWidth;
     const h = el.offsetHeight;
@@ -273,44 +259,44 @@ function attachDragHandlers(el) {
     el.style.top = `${y}px`;
   });
 
-  window.addEventListener("mouseup", async () => {
-    if (!dragging) return;
-    dragging = false;
+  window.addEventListener("mouseup", async ()=>{
+    if(!dragging) return;
+    dragging=false;
+    if(!currentUser) return;
 
-    if (!currentUser) return;
     const id = el.dataset.id;
-
     const x = parseFloat(el.style.left) || 0;
     const y = parseFloat(el.style.top) || 0;
     const z = parseInt(el.style.zIndex || "10", 10);
-
-    await setDoc(itemDoc(currentUser.uid, id), { x, y, z }, { merge: true });
+    await setDoc(itemDoc(currentUser.uid, id), { x,y,z }, { merge:true });
   });
 
-  el.addEventListener("click", () => {
-    if (!currentUser) return;
+  el.addEventListener("click", ()=>{
+    if(!currentUser) return;
     setSelected(el);
     bringToFront(el);
   });
 }
 
 // =========================
-// 10) Board CRUD
+// Board CRUD
 // =========================
-async function addNote() {
-  if (!requireAuth()) return;
+async function addNote(e){
+  e?.preventDefault();
+  if(!requireAuth()) return;
+
   const text = noteText?.value?.trim() || "";
-  if (!text) return showToast("Escribe algo para la nota.");
+  if(!text) return showToast("Escribe algo para la nota.");
 
   const br = boardRect();
   const id = genId();
+
   const item = {
-    id,
-    type: "note",
+    id, type:"note",
     text,
     color: noteColor?.value || "yellow",
-    x: Math.round(br.width * 0.15 + Math.random() * 80),
-    y: Math.round(br.height * 0.15 + Math.random() * 80),
+    x: Math.round(br.width * 0.15 + Math.random()*80),
+    y: Math.round(br.height * 0.15 + Math.random()*80),
     z: ++zCounter,
     rot: randRot(),
     createdAt: Date.now()
@@ -318,39 +304,36 @@ async function addNote() {
 
   await setDoc(itemDoc(currentUser.uid, id), item);
   board.appendChild(createNoteElement(item));
-  if (noteText) noteText.value = "";
+  if(noteText) noteText.value = "";
   showToast("Nota añadida.");
 }
 
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
+function fileToDataUrl(file){
+  return new Promise((resolve,reject)=>{
     const r = new FileReader();
-    r.onload = () => resolve(r.result);
+    r.onload = ()=>resolve(r.result);
     r.onerror = reject;
     r.readAsDataURL(file);
   });
 }
 
-async function addImage() {
-  if (!requireAuth()) return;
+async function addImage(e){
+  e?.preventDefault();
+  if(!requireAuth()) return;
 
   const file = imgFile?.files?.[0];
-  if (!file) return showToast("Selecciona una imagen.");
-
-  if (file.size > 2_000_000) {
-    return showToast("Imagen muy grande (>2MB). Usa una más pequeña para esta demo.");
-  }
+  if(!file) return showToast("Selecciona una imagen.");
+  if(file.size > 2_000_000) return showToast("Imagen muy grande (>2MB).");
 
   const dataUrl = await fileToDataUrl(file);
-
   const br = boardRect();
   const id = genId();
+
   const item = {
-    id,
-    type: "photo",
+    id, type:"photo",
     dataUrl,
-    x: Math.round(br.width * 0.20 + Math.random() * 100),
-    y: Math.round(br.height * 0.20 + Math.random() * 100),
+    x: Math.round(br.width * 0.20 + Math.random()*100),
+    y: Math.round(br.height * 0.20 + Math.random()*100),
     z: ++zCounter,
     rot: randRot(),
     createdAt: Date.now()
@@ -358,527 +341,598 @@ async function addImage() {
 
   await setDoc(itemDoc(currentUser.uid, id), item);
   board.appendChild(createPhotoElement(item));
-  if (imgFile) imgFile.value = "";
+  if(imgFile) imgFile.value = "";
   showToast("Imagen añadida.");
 }
 
-async function loadBoard() {
-  if (!board) return;
-
+async function loadBoard(){
+  if(!board) return;
   board.innerHTML = "";
-  if (boardHint) board.appendChild(boardHint);
+  if(boardHint) board.appendChild(boardHint);
 
-  if (!currentUser) {
+  if(!currentUser){
     boardHint?.classList.remove("hidden");
     return;
   }
-
   boardHint?.classList.add("hidden");
 
   const snap = await getDocs(itemsCol(currentUser.uid));
   const items = [];
-  snap.forEach((d) => items.push(d.data()));
-  items.sort((a, b) => (a.z || 0) - (b.z || 0));
+  snap.forEach(d=>items.push(d.data()));
+  items.sort((a,b)=>(a.z||0)-(b.z||0));
 
-  for (const item of items) {
+  for(const item of items){
     zCounter = Math.max(zCounter, item.z || 10);
-    if (item.type === "note") board.appendChild(createNoteElement(item));
-    if (item.type === "photo") board.appendChild(createPhotoElement(item));
+    if(item.type==="note") board.appendChild(createNoteElement(item));
+    if(item.type==="photo") board.appendChild(createPhotoElement(item));
   }
 }
 
-async function deleteSelected() {
-  if (!requireAuth()) return;
-  if (!selectedEl) return;
-
+async function deleteSelected(){
+  if(!requireAuth()) return;
+  if(!selectedEl) return;
   const id = selectedEl.dataset.id;
   await deleteDoc(itemDoc(currentUser.uid, id));
   selectedEl.remove();
-  selectedEl = null;
+  selectedEl=null;
   showToast("Elemento eliminado.");
 }
 
-async function clearAll() {
-  if (!requireAuth()) return;
-  const ok = confirm("¿Seguro que quieres borrar TODO tu tablero?");
-  if (!ok) return;
+async function clearAll(e){
+  e?.preventDefault();
+  if(!requireAuth()) return;
+  if(!confirm("¿Seguro que quieres borrar TODO tu tablero?")) return;
 
   const snap = await getDocs(itemsCol(currentUser.uid));
   const batch = writeBatch(db);
-  snap.forEach((d) => batch.delete(d.ref));
+  snap.forEach(d=>batch.delete(d.ref));
   await batch.commit();
-
   await loadBoard();
   showToast("Tablero limpio.");
 }
 
 // =========================
-// 11) Notebook UI rendering
+// Notebook: collapse persistence
 // =========================
-function renderNotebookList() {
-  if (!notebookList) return;
-  notebookList.innerHTML = "";
-
-  for (const nb of notebooks) {
-    const row = document.createElement("div");
-    row.className = "indexItem" + (nb.id === activeNotebookId ? " active" : "");
-
-    const name = document.createElement("div");
-    name.className = "name";
-    name.textContent = nb.title || "Libreta";
-    row.appendChild(name);
-
-    row.addEventListener("click", async () => {
-      if (!currentUser) return;
-      if (nb.id === activeNotebookId) return;
-      await setActiveNotebook(nb.id);
-    });
-
-    notebookList.appendChild(row);
-  }
-
-  const has = notebooks.length > 0;
-  if (btnRenameNotebook) btnRenameNotebook.disabled = !has;
-  if (btnDeleteNotebook) btnDeleteNotebook.disabled = !has;
-  if (btnNewPage) btnNewPage.disabled = !has;
-  if (btnDeletePage) btnDeletePage.disabled = !has;
+function collapseKey(nbId){
+  return lsKey(`nbCollapsed.${nbId}`);
 }
-
-function renderPageList() {
-  if (!pageList) return;
-  pageList.innerHTML = "";
-
-  for (const p of notebookPages) {
-    const row = document.createElement("div");
-    row.className = "indexItem" + (p.id === activePageId ? " active" : "");
-
-    const name = document.createElement("div");
-    name.className = "name";
-    name.textContent = p.title || "Página";
-    row.appendChild(name);
-
-    row.addEventListener("click", async () => {
-      if (!currentUser) return;
-      if (p.id === activePageId) return;
-
-      clearTimeout(saveTimer);
-      await saveActivePageNow();
-      setActivePage(p.id);
-    });
-
-    pageList.appendChild(row);
+function isCollapsed(nbId){
+  return safeGet(collapseKey(nbId)) === "1";
+}
+function setCollapsed(nbId, collapsed){
+  safeSet(collapseKey(nbId), collapsed ? "1" : "0");
+}
+function collapseAllExcept(activeId){
+  for(const nb of notebooks){
+    setCollapsed(nb.id, nb.id !== activeId);
   }
 }
 
-function setActivePage(pageId) {
-  activePageId = pageId;
-
-  const page = notebookPages.find(p => p.id === pageId);
-  if (pageEditor) pageEditor.value = page?.content || "";
-
-  renderPageList();
-  if (saveStatus) saveStatus.textContent = "Editando…";
-  setContextLabel();
-}
-
 // =========================
-// 12) Notebook data loading
+// Load notebooks + pages
 // =========================
-async function loadNotebooks() {
+async function loadNotebooksAndPages(){
   notebooks = [];
+  pagesByNotebook = {};
   activeNotebookId = null;
+  activePageId = null;
 
-  if (!currentUser) return;
+  if(!currentUser) return;
 
-  const snap = await getDocs(notebooksCol(currentUser.uid));
-  snap.forEach(d => notebooks.push(d.data()));
-  notebooks.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const nbSnap = await getDocs(notebooksCol(currentUser.uid));
+  nbSnap.forEach(d=>notebooks.push(d.data()));
+  notebooks.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
 
-  const preferred = localStorage.getItem(lsKey("activeNotebookId"));
-  const exists = preferred && notebooks.some(n => n.id === preferred);
-
-  if (exists) activeNotebookId = preferred;
-  else if (notebooks.length > 0) activeNotebookId = notebooks[0].id;
-  else {
+  if(notebooks.length === 0){
     await createNotebook("Mi Libreta");
     return;
   }
 
-  localStorage.setItem(lsKey("activeNotebookId"), activeNotebookId);
-  renderNotebookList();
+  const preferred = safeGet(lsKey("activeNotebookId"));
+  const exists = preferred && notebooks.some(n=>n.id===preferred);
+  activeNotebookId = exists ? preferred : notebooks[0].id;
+  safeSet(lsKey("activeNotebookId"), activeNotebookId);
+
+  // Al abrir, colapsa todo excepto la activa (persistente)
+  collapseAllExcept(activeNotebookId);
+
+  // Load pages for all notebooks (simple + reliable)
+  for(const nb of notebooks){
+    const pSnap = await getDocs(pagesCol(currentUser.uid, nb.id));
+    const pages = [];
+    pSnap.forEach(d=>pages.push(d.data()));
+
+    // Orden: primero order (si existe), luego updatedAt
+    pages.sort((a,b)=>{
+      const ao = (typeof a.order === "number") ? a.order : 999999;
+      const bo = (typeof b.order === "number") ? b.order : 999999;
+      if(ao !== bo) return ao - bo;
+      return (b.updatedAt||0) - (a.updatedAt||0);
+    });
+
+    pagesByNotebook[nb.id] = pages;
+
+    // Si libreta sin páginas, crea una
+    if(pages.length === 0){
+      await createPage(nb.id, "Página 1");
+    }
+  }
+
+  // Set active page (first of active notebook)
+  const activePages = pagesByNotebook[activeNotebookId] || [];
+  activePageId = activePages[0]?.id || null;
+
+  // Fill editor
+  const pg = activePages.find(p=>p.id===activePageId);
+  if(pageEditor) pageEditor.value = pg?.content || "";
+
+  setContextLabel();
+  renderTree();
+}
+
+// =========================
+// Render tree (notebooks + nested pages)
+// =========================
+function renderTree(){
+  if(!treeRoot) return;
+  treeRoot.innerHTML = "";
+
+  for(const nb of notebooks){
+    const nbRow = document.createElement("li");
+
+    const row = document.createElement("div");
+    const collapsed = isCollapsed(nb.id);
+    const expanded = !collapsed;
+
+    row.className = "treeRow" + (nb.id===activeNotebookId ? " active" : "") + (expanded ? " expanded" : "");
+    row.dataset.nb = nb.id;
+
+    const toggle = document.createElement("span");
+    toggle.className = "treeToggle";
+    toggle.textContent = expanded ? "▼" : "▶";
+
+    const text = document.createElement("span");
+    text.className = "treeText";
+    text.textContent = nb.title || "Libreta";
+
+    row.append(toggle, text);
+
+    // Click notebook: activate + collapse others (persistente)
+    row.addEventListener("click", async ()=>{
+      if(!currentUser) return;
+      await setActiveNotebook(nb.id);
+    });
+
+    // Double click rename notebook
+    row.addEventListener("dblclick", async (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      await renameNotebook(nb.id);
+    });
+
+    nbRow.appendChild(row);
+
+    // children pages
+    const ul = document.createElement("ul");
+    ul.className = "treeChildren";
+
+    const pages = pagesByNotebook[nb.id] || [];
+    pages.forEach((p, idx)=>{
+      const li = document.createElement("li");
+
+      const pr = document.createElement("div");
+      pr.className = "pageRow" + (p.id===activePageId ? " active" : "");
+      pr.draggable = (nb.id === activeNotebookId); // solo reorder en activa
+      pr.dataset.page = p.id;
+      pr.dataset.nb = nb.id;
+
+      const drag = document.createElement("span");
+      drag.className = "dragHint";
+      drag.textContent = (nb.id === activeNotebookId) ? "⋮" : "•";
+
+      const label = document.createElement("span");
+      label.className = "treeText";
+      label.textContent = p.title || "Página";
+
+      pr.append(drag, label);
+
+      // Click page
+      pr.addEventListener("click", async (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        if(nb.id !== activeNotebookId){
+          await setActiveNotebook(nb.id);
+        }
+        await saveActivePageNow();
+        setActivePage(p.id);
+      });
+
+      // Double click rename page
+      pr.addEventListener("dblclick", async (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        await renamePage(nb.id, p.id);
+      });
+
+      // Drag & drop reorder (only active notebook)
+      if(nb.id === activeNotebookId){
+        pr.addEventListener("dragstart", (e)=>{
+          e.dataTransfer.setData("text/plain", String(idx));
+          e.dataTransfer.effectAllowed = "move";
+        });
+
+        pr.addEventListener("dragover", (e)=>{
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        });
+
+        pr.addEventListener("drop", async (e)=>{
+          e.preventDefault();
+          const from = parseInt(e.dataTransfer.getData("text/plain"), 10);
+          const to = idx;
+          if(Number.isNaN(from) || from === to) return;
+          await reorderPagesActiveNotebook(from, to);
+        });
+      }
+
+      li.appendChild(pr);
+      ul.appendChild(li);
+    });
+
+    nbRow.appendChild(ul);
+    treeRoot.appendChild(nbRow);
+  }
+
   setContextLabel();
 }
 
-async function loadPagesForActiveNotebook() {
-  notebookPages = [];
-  activePageId = null;
-
-  if (!currentUser || !activeNotebookId) {
-    renderPageList();
-    if (pageEditor) pageEditor.value = "";
-    setContextLabel();
+// =========================
+// Active notebook/page
+// =========================
+async function setActiveNotebook(nbId){
+  if(!currentUser) return;
+  if(nbId === activeNotebookId){
+    // Toggle collapse on same notebook
+    const nowCollapsed = !isCollapsed(nbId);
+    setCollapsed(nbId, nowCollapsed);
+    renderTree();
     return;
   }
-
-  const snap = await getDocs(pagesCol(currentUser.uid, activeNotebookId));
-  snap.forEach(d => notebookPages.push(d.data()));
-  notebookPages.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-
-  if (notebookPages.length === 0) {
-    await createNewPage();
-    return;
-  }
-
-  setActivePage(notebookPages[0].id);
-}
-
-async function setActiveNotebook(notebookId) {
-  if (!currentUser) return;
-  if (notebookId === activeNotebookId) return;
 
   clearTimeout(saveTimer);
   await saveActivePageNow();
 
-  activeNotebookId = notebookId;
-  localStorage.setItem(lsKey("activeNotebookId"), activeNotebookId);
+  activeNotebookId = nbId;
+  safeSet(lsKey("activeNotebookId"), activeNotebookId);
 
-  renderNotebookList();
-  await loadPagesForActiveNotebook();
-  setContextLabel();
+  // Colapsar todas menos la activa (persistente)
+  collapseAllExcept(activeNotebookId);
+
+  // Set active page = first
+  const pages = pagesByNotebook[activeNotebookId] || [];
+  activePageId = pages[0]?.id || null;
+
+  const pg = pages.find(p=>p.id===activePageId);
+  if(pageEditor) pageEditor.value = pg?.content || "";
+
+  if(saveStatus) saveStatus.textContent = "—";
+  renderTree();
+}
+
+function setActivePage(pageId){
+  activePageId = pageId;
+  const pages = pagesByNotebook[activeNotebookId] || [];
+  const pg = pages.find(p=>p.id===activePageId);
+  if(pageEditor) pageEditor.value = pg?.content || "";
+  if(saveStatus) saveStatus.textContent = "Editando…";
+  renderTree();
 }
 
 // =========================
-// 13) Notebook actions
+// Notebook actions
 // =========================
-async function createNotebook(defaultTitle = null) {
-  if (!requireAuth()) return;
+async function createNotebook(defaultTitle=null){
+  if(!requireAuth()) return;
 
-  const title = (defaultTitle ?? prompt("Nombre de la libreta:", `Libreta ${notebooks.length + 1}`))?.trim();
-  if (!title) return;
+  const title = (defaultTitle ?? prompt("Nombre de la libreta:", `Libreta ${notebooks.length+1}`))?.trim();
+  if(!title) return;
 
   const id = genId();
   const nb = { id, title, createdAt: Date.now(), updatedAt: Date.now() };
 
   await setDoc(notebookDoc(currentUser.uid, id), nb);
   notebooks.unshift(nb);
+  pagesByNotebook[id] = [];
+
+  await createPage(id, "Página 1");
 
   await setActiveNotebook(id);
   showToast("Libreta creada ✅");
 }
 
-async function renameActiveNotebook() {
-  if (!requireAuth()) return;
-  if (!activeNotebookId) return;
+async function renameNotebook(nbId){
+  if(!requireAuth()) return;
+  const nb = notebooks.find(n=>n.id===nbId);
+  if(!nb) return;
 
-  const nb = notebooks.find(n => n.id === activeNotebookId);
-  if (!nb) return;
-
-  const next = prompt("Nuevo nombre:", nb.title || "Mi Libreta");
-  if (next === null) return;
+  const next = prompt("Renombrar libreta:", nb.title || "Libreta");
+  if(next === null) return;
   const title = next.trim();
-  if (!title) return;
+  if(!title) return;
 
   nb.title = title;
   nb.updatedAt = Date.now();
 
   await updateDoc(notebookDoc(currentUser.uid, nb.id), { title, updatedAt: nb.updatedAt });
-  renderNotebookList();
+  renderTree();
   setContextLabel();
-  showToast("Libreta renombrada ✅");
+  showToast("Renombrada ✅");
 }
 
-async function batchDeleteByRefs(refs) {
-  const chunks = [];
-  for (let i = 0; i < refs.length; i += 450) chunks.push(refs.slice(i, i + 450));
-  for (const chunk of chunks) {
-    const batch = writeBatch(db);
-    for (const r of chunk) batch.delete(r);
-    await batch.commit();
-  }
-}
-
-async function deleteActiveNotebook() {
-  if (!requireAuth()) return;
-  if (!activeNotebookId) return;
-
-  const nb = notebooks.find(n => n.id === activeNotebookId);
-  const name = nb?.title || "esta libreta";
-  const ok = confirm(`¿Borrar "${name}" y TODAS sus páginas? No hay undo.`);
-  if (!ok) return;
-
-  clearTimeout(saveTimer);
-
-  const pagesSnap = await getDocs(pagesCol(currentUser.uid, activeNotebookId));
-  const pageRefs = [];
-  pagesSnap.forEach(d => pageRefs.push(d.ref));
-  await batchDeleteByRefs(pageRefs);
-
-  await deleteDoc(notebookDoc(currentUser.uid, activeNotebookId));
-
-  notebooks = notebooks.filter(n => n.id !== activeNotebookId);
-  activeNotebookId = null;
-  notebookPages = [];
-  activePageId = null;
-
-  if (notebooks.length === 0) {
-    await createNotebook("Mi Libreta");
-  } else {
-    await setActiveNotebook(notebooks[0].id);
-  }
-
-  renderNotebookList();
-  renderPageList();
-  if (pageEditor) pageEditor.value = "";
-  if (saveStatus) saveStatus.textContent = "—";
-  setContextLabel();
-
-  showToast("Libreta borrada ✅");
-}
-
-async function createNewPage() {
-  if (!requireAuth()) return;
-  if (!activeNotebookId) return showToast("Primero crea/selecciona una libreta.");
-
+async function createPage(nbId, defaultTitle=null){
+  if(!requireAuth()) return;
+  const pages = pagesByNotebook[nbId] || [];
   const id = genId();
-  const title = `Página ${notebookPages.length + 1}`;
-  const page = { id, title, content: "", createdAt: Date.now(), updatedAt: Date.now() };
 
-  await setDoc(pageDoc(currentUser.uid, activeNotebookId, id), page);
-  notebookPages.unshift(page);
-  setActivePage(id);
-  showToast("Nueva página creada.");
+  const title = defaultTitle ?? `Página ${pages.length + 1}`;
+  const page = {
+    id,
+    title,
+    content: "",
+    order: pages.length, // order inicial
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+
+  await setDoc(pageDoc(currentUser.uid, nbId, id), page);
+  pagesByNotebook[nbId] = [...pages, page];
+
+  // keep sorted by order
+  pagesByNotebook[nbId].sort((a,b)=>(a.order??999999)-(b.order??999999));
+
+  // If this notebook is active, open the new page
+  if(nbId === activeNotebookId){
+    setActivePage(id);
+  }
 }
 
-async function deleteActivePage() {
-  if (!requireAuth()) return;
-  if (!activeNotebookId || !activePageId) return;
+async function renamePage(nbId, pageId){
+  if(!requireAuth()) return;
 
-  const ok = confirm("¿Eliminar esta página? No hay undo.");
-  if (!ok) return;
+  const pages = pagesByNotebook[nbId] || [];
+  const pg = pages.find(p=>p.id===pageId);
+  if(!pg) return;
+
+  const next = prompt("Renombrar página:", pg.title || "Página");
+  if(next === null) return;
+  const title = next.trim();
+  if(!title) return;
+
+  pg.title = title;
+  pg.updatedAt = Date.now();
+
+  await updateDoc(pageDoc(currentUser.uid, nbId, pageId), { title, updatedAt: pg.updatedAt });
+  renderTree();
+  setContextLabel();
+  showToast("Página renombrada ✅");
+}
+
+async function deleteActivePage(e){
+  e?.preventDefault();
+  if(!requireAuth()) return;
+  if(!activeNotebookId || !activePageId) return;
+
+  if(!confirm("¿Eliminar esta página? No hay undo.")) return;
 
   await deleteDoc(pageDoc(currentUser.uid, activeNotebookId, activePageId));
-  notebookPages = notebookPages.filter(p => p.id !== activePageId);
+  const pages = pagesByNotebook[activeNotebookId] || [];
+  pagesByNotebook[activeNotebookId] = pages.filter(p=>p.id !== activePageId);
 
-  if (notebookPages.length === 0) {
-    await createNewPage();
-    return;
+  // If none, create one
+  if(pagesByNotebook[activeNotebookId].length === 0){
+    await createPage(activeNotebookId, "Página 1");
   }
 
-  setActivePage(notebookPages[0].id);
-  showToast("Página eliminada.");
+  // Activate first
+  const first = pagesByNotebook[activeNotebookId][0];
+  activePageId = first?.id || null;
+  if(pageEditor) pageEditor.value = first?.content || "";
+
+  renderTree();
+  setContextLabel();
+  showToast("Página eliminada ✅");
 }
 
-async function saveActivePageNow() {
-  if (!currentUser || !activeNotebookId || !activePageId) return;
+// Reorder pages (active notebook) + persist order to Firestore
+async function reorderPagesActiveNotebook(fromIndex, toIndex){
+  if(!requireAuth()) return;
+  const nbId = activeNotebookId;
+  const pages = [...(pagesByNotebook[nbId] || [])];
+  if(fromIndex < 0 || toIndex < 0 || fromIndex >= pages.length || toIndex >= pages.length) return;
 
-  const page = notebookPages.find(p => p.id === activePageId);
-  if (!page) return;
+  const [moved] = pages.splice(fromIndex, 1);
+  pages.splice(toIndex, 0, moved);
 
-  page.content = pageEditor?.value ?? "";
-  page.updatedAt = Date.now();
+  // reassign order sequentially
+  pages.forEach((p, i)=>{ p.order = i; });
 
-  await setDoc(pageDoc(currentUser.uid, activeNotebookId, page.id), page, { merge: true });
-  if (saveStatus) saveStatus.textContent = "Guardado ✅";
+  pagesByNotebook[nbId] = pages;
+
+  // Persist in batch
+  const batch = writeBatch(db);
+  for(const p of pages){
+    batch.update(pageDoc(currentUser.uid, nbId, p.id), { order: p.order, updatedAt: Date.now() });
+  }
+  await batch.commit();
+
+  renderTree();
+  showToast("Orden guardado ✅");
+}
+
+// =========================
+// Autosave page content
+// =========================
+async function saveActivePageNow(){
+  if(!currentUser || !activeNotebookId || !activePageId) return;
+  const pages = pagesByNotebook[activeNotebookId] || [];
+  const pg = pages.find(p=>p.id===activePageId);
+  if(!pg) return;
+
+  pg.content = pageEditor?.value ?? "";
+  pg.updatedAt = Date.now();
+
+  await setDoc(pageDoc(currentUser.uid, activeNotebookId, activePageId), pg, { merge:true });
+  if(saveStatus) saveStatus.textContent = "Guardado ✅";
   setContextLabel();
 }
 
-function scheduleSave() {
-  if (saveStatus) saveStatus.textContent = "Guardando…";
+function scheduleSave(){
+  if(saveStatus) saveStatus.textContent = "Guardando…";
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    saveActivePageNow().catch(console.error);
-  }, 600);
+  saveTimer = setTimeout(()=>saveActivePageNow().catch(console.error), 600);
 }
 
 // =========================
-// 14) Modal open/close
+// Modal open/close
 // =========================
-async function openNotebook() {
-  if (!requireAuth()) return;
+async function openNotebook(e){
+  e?.preventDefault();
+  if(!requireAuth()) return;
 
   notebookOverlay?.classList.remove("hidden");
   notebookOverlay?.setAttribute("aria-hidden", "false");
 
-  try {
-    await loadNotebooks();
-    await loadPagesForActiveNotebook();
-    renderNotebookList();
-    renderPageList();
-  } catch (e) {
-    console.error("NOTEBOOK OPEN ERROR:", e);
-    showToast(`Notebook: ${e?.code || e?.message || e}`);
+  try{
+    await loadNotebooksAndPages();
+    renderTree();
+  }catch(err){
+    console.error(err);
+    showToast(err?.code || err?.message || String(err));
   }
 
   pageEditor?.focus();
 }
 
-async function closeNotebook() {
-  try {
+async function closeNotebook(e){
+  e?.preventDefault();
+  try{
     clearTimeout(saveTimer);
     await saveActivePageNow();
-  } catch (e) {
-    console.error("CLOSE/SAVE NOTEBOOK ERROR:", e);
-    showToast(`Save: ${e?.code || e?.message || e}`);
+  }catch(err){
+    console.error(err);
   }
-
   notebookOverlay?.classList.add("hidden");
   notebookOverlay?.setAttribute("aria-hidden", "true");
 }
 
 // =========================
-// 15) Auth
+// Auth
 // =========================
-btnLoginGoogle?.addEventListener("click", async () => {
-  try {
+async function loginGoogle(e){
+  e?.preventDefault();
+  try{
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
-  } catch (e) {
-    console.error("AUTH ERROR:", e);
-    const code = e?.code || "";
-    const msg = e?.message || "";
-    showToast(code ? `Error: ${code}` : `Error: ${msg}`);
+  }catch(err){
+    console.error(err);
+    showToast(err?.code || err?.message || "Error de auth");
   }
-});
+}
 
-btnLogout?.addEventListener("click", async () => {
-  try {
+async function logout(e){
+  e?.preventDefault();
+  try{
     await signOut(auth);
-  } catch (e) {
-    console.error(e);
+  }catch(err){
+    console.error(err);
   }
-});
+}
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, async (user)=>{
   currentUser = user || null;
 
-  if (currentUser) {
-    btnLoginGoogle?.classList.add("hidden");
-    btnLogout?.classList.remove("hidden");
-
+  if(currentUser){
+    lnkLoginGoogle?.classList.add("hidden");
+    lnkLogout?.classList.remove("hidden");
     userBadge?.classList.remove("hidden");
-    if (userPhoto) userPhoto.src = currentUser.photoURL || "";
-    if (userName) userName.textContent = currentUser.displayName || "Usuario";
-    if (userEmail) userEmail.textContent = currentUser.email || "";
+    if(userPhoto) userPhoto.src = currentUser.photoURL || "";
+    if(userName) userName.textContent = currentUser.displayName || "Usuario";
+    if(userEmail) userEmail.textContent = currentUser.email || "";
 
     await loadBoard();
-
-    try {
-      await loadNotebooks();
-      await loadPagesForActiveNotebook();
-    } catch (e) {
-      console.error("PRELOAD NOTEBOOK ERROR:", e);
-    }
-
     showToast("Sesión iniciada ✅");
-  } else {
-    btnLoginGoogle?.classList.remove("hidden");
-    btnLogout?.classList.add("hidden");
-
+  }else{
+    lnkLoginGoogle?.classList.remove("hidden");
+    lnkLogout?.classList.add("hidden");
     userBadge?.classList.add("hidden");
-    if (userPhoto) userPhoto.src = "";
-    if (userName) userName.textContent = "";
-    if (userEmail) userEmail.textContent = "";
+
+    if(userPhoto) userPhoto.src = "";
+    if(userName) userName.textContent = "";
+    if(userEmail) userEmail.textContent = "";
 
     selectedEl = null;
-
     notebooks = [];
+    pagesByNotebook = {};
     activeNotebookId = null;
-    notebookPages = [];
     activePageId = null;
 
-    notebookList && (notebookList.innerHTML = "");
-    pageList && (pageList.innerHTML = "");
-    if (pageEditor) pageEditor.value = "";
-    if (saveStatus) saveStatus.textContent = "—";
     notebookOverlay?.classList.add("hidden");
     setContextLabel();
-
     await loadBoard();
   }
 });
 
 // =========================
-// 16) UI events
+// Events (links only)
 // =========================
-btnAddNote?.addEventListener("click", addNote);
-btnAddImage?.addEventListener("click", addImage);
-btnClear?.addEventListener("click", clearAll);
+lnkLoginGoogle?.addEventListener("click", loginGoogle);
+lnkLogout?.addEventListener("click", logout);
 
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Delete") deleteSelected();
+lnkAddNote?.addEventListener("click", addNote);
+lnkAddImage?.addEventListener("click", addImage);
+lnkClear?.addEventListener("click", clearAll);
+
+lnkNotebook?.addEventListener("click", openNotebook);
+lnkCloseNotebook?.addEventListener("click", closeNotebook);
+
+lnkNewNotebook?.addEventListener("click", async (e)=>{
+  e.preventDefault();
+  await createNotebook();
+  renderTree();
 });
 
-board?.addEventListener("mousedown", (e) => {
-  if (e.target === board) setSelected(null);
+lnkNewPage?.addEventListener("click", async (e)=>{
+  e.preventDefault();
+  if(!requireAuth()) return;
+  if(!activeNotebookId) return;
+  await createPage(activeNotebookId);
+  renderTree();
 });
 
-btnNotebook?.addEventListener("click", openNotebook);
-btnCloseNotebook?.addEventListener("click", closeNotebook);
+lnkDeletePage?.addEventListener("click", deleteActivePage);
 
-btnNewPage?.addEventListener("click", createNewPage);
-btnDeletePage?.addEventListener("click", deleteActivePage);
-
-btnNewNotebook?.addEventListener("click", () => createNotebook());
-btnRenameNotebook?.addEventListener("click", renameActiveNotebook);
-btnDeleteNotebook?.addEventListener("click", deleteActiveNotebook);
-
-notebookOverlay?.addEventListener("mousedown", (e) => {
-  if (e.target === notebookOverlay) closeNotebook();
+// Close modal clicking overlay
+notebookOverlay?.addEventListener("mousedown", (e)=>{
+  if(e.target === notebookOverlay) closeNotebook(e);
 });
 
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && notebookOverlay && !notebookOverlay.classList.contains("hidden")) {
-    closeNotebook();
+// Keyboard
+window.addEventListener("keydown", (e)=>{
+  if(e.key === "Delete") deleteSelected();
+  if(e.key === "Escape" && notebookOverlay && !notebookOverlay.classList.contains("hidden")){
+    closeNotebook(e);
   }
 });
 
-pageEditor?.addEventListener("input", () => {
-  if (!currentUser) return;
-  if (!activeNotebookId || !activePageId) return;
+// Board deselect
+board?.addEventListener("mousedown", (e)=>{
+  if(e.target === board) setSelected(null);
+});
+
+// Autosave typing
+pageEditor?.addEventListener("input", ()=>{
+  if(!currentUser) return;
+  if(!activeNotebookId || !activePageId) return;
   scheduleSave();
 });
-
-// =========================
-// 17) Theme toggle (CLASS-BASED) — minimal/day/cork
-// =========================
-const THEMES = ["minimal", "day", "cork"];
-
-function safeGet(key) {
-  try { return localStorage.getItem(key); } catch { return null; }
-}
-function safeSet(key, value) {
-  try { localStorage.setItem(key, value); } catch { /* ignore */ }
-}
-
-function applyTheme(t) {
-  // Limpia clases previas
-  document.body.classList.remove("theme-day", "theme-cork");
-
-  if (t === "day") document.body.classList.add("theme-day");
-  if (t === "cork") document.body.classList.add("theme-cork");
-
-  safeSet("board.theme", t);
-
-  if (btnTheme) {
-    const label = t === "minimal" ? "Minimal" : (t === "day" ? "Day" : "Cork");
-    btnTheme.textContent = `🎨 ${label}`;
-  }
-}
-
-function getTheme() {
-  const t = safeGet("board.theme") || "minimal";
-  return THEMES.includes(t) ? t : "minimal";
-}
-
-function cycleTheme() {
-  const current = getTheme();
-  const i = THEMES.indexOf(current);
-  const next = THEMES[(i + 1) % THEMES.length];
-  applyTheme(next);
-}
-
-// init theme
-applyTheme(getTheme());
-
-// click
-btnTheme?.addEventListener("click", cycleTheme);
