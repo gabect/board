@@ -1,7 +1,7 @@
 /* =========================================================
    Minimal Focus Dark — con índice derecho (Libretas + Páginas)
    Sustituye tu style.css completo
-   ========================================================= */
+   ========================================================= 
 
 :root{
   --bg:#0f1115;
@@ -265,7 +265,498 @@ kbd{
   padding: 2px 6px;
   border-radius: 8px;
   font-size: .9em;
+}*/
+
+/* =========================================================
+   MINIMAL GRAYSCALE THEME (Recto, sin curvas)
+   - 0 border-radius
+   - Botones = texto con borde TOP + RIGHT
+   - Inputs = borde TOP + RIGHT
+   - Modal split: índice izq + editor der
+   ========================================================= */
+
+:root{
+  /* Grises neutros (confort visual) */
+  --bg: #0f1114;
+  --bg2:#0b0d10;
+  --panel:#14171b;
+  --card:#121418;
+  --text:#e7e9ee;
+  --muted:#a6acb7;
+
+  /* líneas */
+  --line:#2a2f36;
+  --line2:#20242a;
+
+  /* focus */
+  --focus:#c9ced8;
+
+  /* sombras muy suaves */
+  --shadow: 0 18px 40px rgba(0,0,0,.45);
+
+  /* espaciado */
+  --pad: 14px;
+  --pad2: 10px;
+
+  /* tamaño */
+  --topbarH: 58px;
 }
+
+/* reset recto */
+*{ box-sizing:border-box; border-radius:0 !important; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: linear-gradient(180deg, var(--bg), var(--bg2));
+  color: var(--text);
+}
+
+.hidden{ display:none !important; }
+.muted{ color: var(--muted); }
+.small{ font-size:.9rem; }
+
+/* =========================================================
+   TOPBAR
+   ========================================================= */
+.topbar{
+  height: var(--topbarH);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(15,17,20,.92);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  white-space:nowrap;
+}
+.brand .dot{
+  width:10px; height:10px;
+  background:#808692;
+}
+.auth{ display:flex; align-items:center; gap:10px; }
+
+.userBadge{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  background: rgba(255,255,255,.02);
+}
+.userBadge img{
+  width:28px; height:28px;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+.userMeta{ display:flex; flex-direction:column; line-height:1.1; }
+.userName{ font-weight:600; font-size:.95rem; }
+
+/* =========================================================
+   BOTONES MINIMAL
+   - NO botón literal: solo borde TOP + RIGHT
+   ========================================================= */
+.btn{
+  cursor:pointer;
+  background: transparent;
+  color: var(--text);
+  padding: 8px 10px;
+  border: none;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  letter-spacing: .2px;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+.btn:hover{
+  background: rgba(255,255,255,.03);
+  border-top-color: var(--focus);
+  border-right-color: var(--focus);
+}
+.btn:active{
+  background: rgba(255,255,255,.05);
+}
+.btn.primary{
+  border-top-color: var(--focus);
+  border-right-color: var(--focus);
+}
+.btn.danger{
+  color: #e6c0c0;
+  border-top-color: #6a3a3a;
+  border-right-color: #6a3a3a;
+}
+.btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+/* =========================================================
+   LAYOUT PRINCIPAL
+   ========================================================= */
+.layout{
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  gap: 14px;
+  padding: 14px;
+  min-height: calc(100vh - var(--topbarH));
+}
+
+.panel{
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: var(--pad);
+}
+.panel h2{ margin: 0 0 12px 0; font-size:1.1rem; }
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--line2);
+  padding: 12px;
+  margin: 10px 0;
+}
+.card h3{ margin: 0 0 10px 0; font-size: .95rem; }
+.card.danger{ border-color:#2d1f1f; }
+.card.info{ border-color: var(--line); }
+
+.row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top:10px;
+}
+.row > *{ flex:1; }
+.row .btn{ flex:0 0 auto; }
+
+/* =========================================================
+   INPUTS: solo borde TOP + RIGHT
+   ========================================================= */
+textarea, select, input[type="file"]{
+  width:100%;
+  margin-top:6px;
+  background: transparent;
+  color: var(--text);
+  padding: 10px;
+  outline:none;
+
+  border: none;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+
+textarea:focus, select:focus, input[type="file"]:focus{
+  border-top-color: var(--focus);
+  border-right-color: var(--focus);
+}
+
+/* =========================================================
+   BOARD
+   ========================================================= */
+.boardWrap{
+  background: transparent;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  position:relative;
+}
+
+.board{
+  position:relative;
+  width:100%;
+  height: calc(100vh - (var(--topbarH) + 34px));
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)),
+    #0d0f12;
+}
+
+.board::before{
+  content:"";
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size: 36px 36px;
+  opacity:.35;
+  pointer-events:none;
+}
+
+.boardHint{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color: rgba(166,172,183,.9);
+  font-size:1rem;
+  text-align:center;
+  padding:20px;
+  pointer-events:none;
+}
+
+/* Items */
+.item{
+  position:absolute;
+  user-select:none;
+  cursor:grab;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 16px 30px rgba(0,0,0,.35);
+}
+.item:active{ cursor:grabbing; }
+.item.selected{
+  outline: 2px solid rgba(201,206,216,.55);
+  outline-offset: 2px;
+}
+
+.note{
+  width: 220px;
+  min-height: 140px;
+  padding: 12px 12px 18px 12px;
+  transform: rotate(var(--rot));
+}
+.note .pin{
+  position:absolute;
+  top:8px; left:50%;
+  width:10px; height:10px;
+  transform: translateX(-50%);
+  background: #9aa0aa;
+}
+.note .content{
+  white-space:pre-wrap;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: #13161a;
+}
+
+/* tus colores de notas se quedan (si quieres, luego los neutralizo) */
+.note.yellow{background:#fff4a6}
+.note.pink{background:#ffd0e3}
+.note.blue{background:#bfe7ff}
+.note.green{background:#c8ffd6}
+.note.paper{background:#f2efe8}
+
+/* Photos */
+.photo{
+  width: 260px;
+  height: 180px;
+  overflow:hidden;
+  background: #111;
+  transform: rotate(var(--rot));
+}
+.photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.photo .pin{
+  position:absolute;
+  top:8px; left:50%;
+  width:12px; height:12px;
+  transform: translateX(-50%);
+  background: #9aa0aa;
+}
+
+/* Toast minimal */
+.toast{
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  background: rgba(10,12,15,.92);
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  color: var(--text);
+  padding: 10px 14px;
+  z-index: 2000;
+  box-shadow: var(--shadow);
+}
+
+/* kbd */
+kbd{
+  background: rgba(255,255,255,.04);
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 2px 6px;
+  font-size: .9em;
+}
+
+/* =========================================================
+   NOTEBOOK MODAL
+   ========================================================= */
+.overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.66);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.modal{
+  width: min(1100px, 96vw);
+  height: min(720px, 90vh);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Modal top bar */
+.modalTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255,255,255,.02);
+}
+.modalTitle{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  flex-wrap: wrap;
+}
+.modalActions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* Split layout */
+.modalBodySplit{
+  flex:1;
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 0;
+}
+
+/* Index panel (izquierda) */
+.indexPanel{
+  border-right: 1px solid var(--line);
+  background: rgba(255,255,255,.01);
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+.indexHeader{
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.indexActions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.indexSection{
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.indexLabel{
+  letter-spacing: .12em;
+  font-size: .72rem;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* Listas estilo “índice” (no botones) */
+.indexList{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+/* Cada item del índice */
+.indexItem{
+  padding: 10px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  color: var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.indexItem:hover{
+  background: rgba(255,255,255,.03);
+  border-top-color: var(--focus);
+  border-right-color: var(--focus);
+}
+.indexItem.active{
+  background: rgba(255,255,255,.04);
+  border-top-color: var(--focus);
+  border-right-color: var(--focus);
+}
+
+.indexFooter{
+  margin-top: 10px;
+  display:flex;
+  justify-content:flex-end;
+}
+
+.indexStatus{
+  margin-top:auto;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+/* Editor (derecha) */
+.editorPanel{
+  min-height:0;
+  padding: 12px;
+  background: #0e1013;
+}
+
+.pageEditor{
+  width: 100%;
+  height: 100%;
+  resize: none;
+  background: transparent;
+  color: var(--text);
+  padding: 14px;
+
+  border: none;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  outline:none;
+
+  line-height: 1.45;
+  font-size: 1rem;
+}
+.pageEditor:focus{
+  border-top-color: var(--focus);
+  border-right-color: var(--focus);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 980px){
+  .layout{ grid-template-columns: 1fr; }
+  .board{ height: 60vh; }
+  .modalBodySplit{ grid-template-columns: 1fr; }
+  .indexPanel{ border-right:none; border-bottom:1px solid var(--line); }
+  .editorPanel{ height: 48vh; }
+}
+
 
 /* =========================
    Notebook Modal (nuevo layout)
