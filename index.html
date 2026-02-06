@@ -13,8 +13,8 @@
     <div class="brand">
       <span class="dot"></span>
       <strong>Private Board</strong>
-      <span class="muted">— tu corcho personal</span><button id="btnTheme" class="btn">🎨 Tema</button>
-
+      <span class="muted">— tu corcho personal</span>
+      <button id="btnTheme" class="btn" type="button">🎨 Tema</button>
     </div>
 
     <div class="auth">
@@ -26,8 +26,8 @@
         </div>
       </div>
 
-      <button id="btnLoginGoogle" class="btn primary">Entrar con Google</button>
-      <button id="btnLogout" class="btn hidden">Salir</button>
+      <button id="btnLoginGoogle" class="btn primary" type="button">Entrar con Google</button>
+      <button id="btnLogout" class="btn hidden" type="button">Salir</button>
     </div>
   </header>
 
@@ -37,11 +37,11 @@
 
       <div class="card">
         <h3>Nota</h3>
-        <label class="small muted">Texto</label>
+        <label class="small muted" for="noteText">Texto</label>
         <textarea id="noteText" rows="4" placeholder="Escribe una nota..."></textarea>
 
         <div class="row">
-          <label class="small muted">Color</label>
+          <label class="small muted" for="noteColor">Color</label>
           <select id="noteColor">
             <option value="yellow">Amarillo</option>
             <option value="pink">Rosado</option>
@@ -50,7 +50,7 @@
             <option value="paper">Papel</option>
           </select>
 
-          <button id="btnAddNote" class="btn">Añadir</button>
+          <button id="btnAddNote" class="btn" type="button">Añadir</button>
         </div>
       </div>
 
@@ -61,12 +61,12 @@
           Nota: esta demo guarda la imagen como <em>dataURL</em> en Firestore (sirve para prototipos).
           Para producción, sube a Firebase Storage.
         </p>
-        <button id="btnAddImage" class="btn">Poner imagen</button>
+        <button id="btnAddImage" class="btn" type="button">Poner imagen</button>
       </div>
 
       <div class="card danger">
         <h3>Tablero</h3>
-        <button id="btnClear" class="btn danger">Borrar todo</button>
+        <button id="btnClear" class="btn danger" type="button">Borrar todo</button>
         <p class="muted small">Esto elimina tus items en la nube. No hay “undo”.</p>
       </div>
 
@@ -82,7 +82,7 @@
 
       <div class="card">
         <h3>Libreta</h3>
-        <button id="btnNotebook" class="btn">Abrir libreta</button>
+        <button id="btnNotebook" class="btn" type="button">Abrir libreta</button>
       </div>
 
       <div class="card small muted">
@@ -101,103 +101,64 @@
 
   <div id="toast" class="toast hidden"></div>
 
- 
-<!-- Notebook Modal -->
-<div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
-  <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
+  <!-- Notebook Modal (ÚNICO) -->
+  <div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
+    <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
 
-    <!-- TOP BAR -->
-    <div class="modalTop">
-      <div class="modalTitle">
-        <strong>Libreta</strong>
-        <span class="muted small">— notas privadas</span>
-        <span id="activeContextLabel" class="muted small" style="margin-left:10px;">—</span>
+      <div class="modalTop">
+        <div class="modalTitle">
+          <strong>Libreta</strong>
+          <span class="muted small">— notas privadas</span>
+          <span id="activeContextLabel" class="muted small" style="margin-left:10px;">—</span>
+        </div>
+
+        <div class="modalActions">
+          <button id="btnNewPage" class="btn" type="button">+ Página</button>
+          <button id="btnCloseNotebook" class="btn" type="button">Cerrar</button>
+        </div>
       </div>
 
-      <div class="modalActions">
-        <button id="btnNewPage" class="btn">+ Página</button>
-        <button id="btnCloseNotebook" class="btn">Cerrar</button>
+      <div class="modalBodySplit">
+        <!-- IZQUIERDA: ÍNDICE -->
+        <aside class="indexPanel">
+          <div class="indexHeader">
+            <div class="indexTitle">
+              <strong>Índice</strong>
+            </div>
+            <div class="indexActions">
+              <button id="btnNewNotebook" class="btn" type="button">+ Libreta</button>
+              <button id="btnRenameNotebook" class="btn" type="button">Renombrar</button>
+              <button id="btnDeleteNotebook" class="btn danger" type="button">Borrar</button>
+            </div>
+          </div>
+
+          <div class="indexSection">
+            <div class="indexLabel muted small">LIBRETAS</div>
+            <div id="notebookList" class="indexList"></div>
+          </div>
+
+          <div class="indexSection">
+            <div class="indexLabel muted small">PÁGINAS</div>
+            <div id="pageList" class="indexList"></div>
+
+            <div class="indexFooter">
+              <button id="btnDeletePage" class="btn danger" type="button">Eliminar página</button>
+            </div>
+          </div>
+
+          <div class="indexStatus">
+            <span id="saveStatus" class="muted small">—</span>
+          </div>
+        </aside>
+
+        <!-- DERECHA: EDITOR -->
+        <section class="editorPanel">
+          <textarea id="pageEditor" class="pageEditor" placeholder="Escribe aquí..."></textarea>
+        </section>
       </div>
-    </div>
-
-    <!-- BODY: LEFT INDEX + RIGHT EDITOR -->
-    <div class="modalBodySplit">
-
-      <!-- LEFT: INDEX -->
-      <aside class="indexPanel">
-        <div class="indexHeader">
-          <div class="indexTitle">
-            <strong>Índice</strong>
-          </div>
-          <div class="indexActions">
-            <button id="btnNewNotebook" class="btn">+ Libreta</button>
-            <button id="btnRenameNotebook" class="btn">Renombrar</button>
-            <button id="btnDeleteNotebook" class="btn danger">Borrar</button>
-          </div>
-        </div>
-
-        <div class="indexSection">
-          <div class="indexLabel muted small">LIBRETAS</div>
-          <div id="notebookList" class="indexList"></div>
-        </div>
-
-        <div class="indexSection">
-          <div class="indexLabel muted small">PÁGINAS</div>
-          <div id="pageList" class="indexList"></div>
-
-          <div class="indexFooter">
-            <button id="btnDeletePage" class="btn danger">Eliminar página</button>
-          </div>
-        </div>
-
-        <div class="indexStatus">
-          <span id="saveStatus" class="muted small">—</span>
-        </div>
-      </aside>
-
-      <!-- RIGHT: EDITOR -->
-      <section class="editorPanel">
-        <textarea id="pageEditor" class="pageEditor" placeholder="Escribe aquí..."></textarea>
-      </section>
 
     </div>
   </div>
-</div>
-
-
-
-    
-   
-        <div class="indexLists">
-          <!-- Libretas -->
-          <section class="indexSection">
-            <div class="indexSectionHeader">
-            
-            <div id="notebookList" class="indexList">
-              <!-- JS renderiza aquí -->
-            </div>
-          </section>
-
-          <!-- Páginas
-          <section class="indexSection">
-            <div class="indexSectionHeader">
-              <div class="label">Páginas</div>
-              <button id="btnDeletePage" class="btn danger">Eliminar</button>
-            </div>
-            <div id="pageList" class="indexList">
-              <!-- JS renderiza aquí -->
-            </div>
-            <div class="modalBottom" style="border-top:1px solid var(--line);">
-              <span id="saveStatus" class="muted small">—</span>
-            </div>
-          </section> -->
-        </div>
-      </aside>
-    </div>
-
-  </div>
-</div>
-
 
   <script type="module" src="app.js?v=7"></script>
 </body>
