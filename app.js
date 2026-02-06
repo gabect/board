@@ -887,36 +887,28 @@ pageEditor?.addEventListener("input", () => {
   if (!activeNotebookId || !activePageId) return;
   scheduleSave();
 });
-
-// ===== Theme toggle (Corkboard) =====
-const btnTheme = document.getElementById("btnTheme");
-
-function applyThemeFromStorage() {
-  const t = localStorage.getItem("board.theme") || "minimal";
-  document.body.classList.toggle("theme-cork", t === "cork");
-}
-
-function toggleTheme() {
-  const isCork = document.body.classList.toggle("theme-cork");
-  localStorage.setItem("board.theme", isCork ? "cork" : "minimal");
-}
-
-applyThemeFromStorage();
-btnTheme?.addEventListener("click", toggleTheme);
-
-
 // =========================
-// Theme switch (dark/day/cork)
+// Theme switch (dark/day/cork) — SAFE for iOS WebKit
 // =========================
 const btnTheme = document.getElementById("btnTheme");
 const THEMES = ["dark", "day", "cork"];
 
-function getTheme() {
-  return localStorage.getItem("ui.theme") || "dark";
+function safeGet(key) {
+  try { return localStorage.getItem(key); }
+  catch { return null; }
 }
+function safeSet(key, value) {
+  try { localStorage.setItem(key, value); }
+  catch { /* ignore: storage blocked */ }
+}
+
+function getTheme() {
+  return safeGet("ui.theme") || "dark";
+}
+
 function setTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
-  localStorage.setItem("ui.theme", t);
+  safeSet("ui.theme", t);
   if (btnTheme) btnTheme.textContent = `Tema: ${t}`;
 }
 
@@ -927,8 +919,10 @@ function cycleTheme() {
   setTheme(next);
 }
 
-// init theme on load
+// init theme on load (safe)
 setTheme(getTheme());
 
 // click handler
 btnTheme?.addEventListener("click", cycleTheme);
+
+
