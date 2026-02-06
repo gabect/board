@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="night">
 <head>
   <link rel="icon" href="data:,">
   <meta charset="utf-8" />
@@ -14,10 +14,20 @@
       <span class="dot"></span>
       <strong>Private Board</strong>
       <span class="muted">— tu corcho personal</span>
-      <button id="btnTheme" class="btn" type="button">🎨 Tema</button>
     </div>
 
-    <div class="auth">
+    <nav class="topActions" aria-label="Acciones">
+      <a id="lnkTheme" class="link" href="#">Tema</a>
+      <span class="sep">|</span>
+      <a id="lnkNotebook" class="link" href="#">Libreta</a>
+      <span class="sep">|</span>
+      <a id="lnkLoginGoogle" class="link" href="#">Entrar con Google</a>
+      <a id="lnkLogout" class="link hidden" href="#">Salir</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <aside class="panel">
       <div id="userBadge" class="userBadge hidden">
         <img id="userPhoto" alt="" />
         <div class="userMeta">
@@ -26,17 +36,8 @@
         </div>
       </div>
 
-      <button id="btnLoginGoogle" class="btn primary" type="button">Entrar con Google</button>
-      <button id="btnLogout" class="btn hidden" type="button">Salir</button>
-    </div>
-  </header>
-
-  <main class="layout">
-    <aside class="panel">
-      <h2>Herramientas</h2>
-
-      <div class="card">
-        <h3>Nota</h3>
+      <section class="block">
+        <div class="blockTitle">Nota</div>
         <label class="small muted" for="noteText">Texto</label>
         <textarea id="noteText" rows="4" placeholder="Escribe una nota..."></textarea>
 
@@ -50,44 +51,38 @@
             <option value="paper">Papel</option>
           </select>
 
-          <button id="btnAddNote" class="btn" type="button">Añadir</button>
+          <a id="lnkAddNote" class="linkAction" href="#">Añadir</a>
         </div>
-      </div>
+      </section>
 
-      <div class="card">
-        <h3>Imagen (tachuelo)</h3>
+      <section class="block">
+        <div class="blockTitle">Imagen</div>
         <input id="imgFile" type="file" accept="image/*" />
         <p class="muted small">
-          Nota: esta demo guarda la imagen como <em>dataURL</em> en Firestore (sirve para prototipos).
-          Para producción, sube a Firebase Storage.
+          Nota: esta demo guarda la imagen como <em>dataURL</em> en Firestore.
         </p>
-        <button id="btnAddImage" class="btn" type="button">Poner imagen</button>
-      </div>
+        <a id="lnkAddImage" class="linkAction" href="#">Poner imagen</a>
+      </section>
 
-      <div class="card danger">
-        <h3>Tablero</h3>
-        <button id="btnClear" class="btn danger" type="button">Borrar todo</button>
-        <p class="muted small">Esto elimina tus items en la nube. No hay “undo”.</p>
-      </div>
+      <section class="block danger">
+        <div class="blockTitle">Tablero</div>
+        <a id="lnkClear" class="linkAction danger" href="#">Borrar todo</a>
+        <p class="muted small">Esto elimina tus items en la nube. No hay undo.</p>
+      </section>
 
-      <div class="card info">
-        <h3>Tips</h3>
-        <ul class="small">
+      <section class="block">
+        <div class="blockTitle">Tips</div>
+        <ul class="small tips">
           <li>Arrastra con el mouse para mover.</li>
           <li>Click en un elemento = lo trae al frente.</li>
           <li>Doble click en una nota = editar.</li>
           <li>Tecla <kbd>Delete</kbd> = borrar seleccionado.</li>
         </ul>
-      </div>
+      </section>
 
-      <div class="card">
-        <h3>Libreta</h3>
-        <button id="btnNotebook" class="btn" type="button">Abrir libreta</button>
-      </div>
-
-      <div class="card small muted">
-        <strong>Privacidad:</strong> solo usuarios autenticados ven su propio tablero (por UID).
-      </div>
+      <section class="block small muted">
+        <strong>Privacidad:</strong> cada usuario ve solo lo suyo (por UID).
+      </section>
     </aside>
 
     <section class="boardWrap">
@@ -101,65 +96,50 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <!-- Notebook Modal (ÚNICO) -->
+  <!-- Notebook Modal -->
   <div id="notebookOverlay" class="overlay hidden" aria-hidden="true">
-    <div id="notebookModal" class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Libreta">
 
       <div class="modalTop">
         <div class="modalTitle">
           <strong>Libreta</strong>
-          <span class="muted small">— notas privadas</span>
+          <span class="muted small">— doble click para renombrar</span>
           <span id="activeContextLabel" class="muted small" style="margin-left:10px;">—</span>
         </div>
 
-        <div class="modalActions">
-          <button id="btnNewPage" class="btn" type="button">+ Página</button>
-          <button id="btnCloseNotebook" class="btn" type="button">Cerrar</button>
+        <div class="modalLinks">
+          <a id="lnkNewNotebook" class="link" href="#">+ Libreta</a>
+          <span class="sep">|</span>
+          <a id="lnkNewPage" class="link" href="#">+ Página</a>
+          <span class="sep">|</span>
+          <a id="lnkDeletePage" class="link danger" href="#">Eliminar página</a>
+          <span class="sep">|</span>
+          <a id="lnkCloseNotebook" class="link" href="#">Cerrar</a>
         </div>
       </div>
 
-      <div class="modalBodySplit">
-        <!-- IZQUIERDA: ÍNDICE -->
+      <div class="modalBody">
+        <!-- LEFT: TREE INDEX -->
         <aside class="indexPanel">
           <div class="indexHeader">
-            <div class="indexTitle">
-              <strong>Índice</strong>
-            </div>
-            <div class="indexActions">
-              <button id="btnNewNotebook" class="btn" type="button">+ Libreta</button>
-              <button id="btnRenameNotebook" class="btn" type="button">Renombrar</button>
-              <button id="btnDeleteNotebook" class="btn danger" type="button">Borrar</button>
-            </div>
+            <div class="indexLabel">ÍNDICE</div>
+            <div id="saveStatus" class="muted small">—</div>
           </div>
 
-          <div class="indexSection">
-            <div class="indexLabel muted small">LIBRETAS</div>
-            <div id="notebookList" class="indexList"></div>
-          </div>
-
-          <div class="indexSection">
-            <div class="indexLabel muted small">PÁGINAS</div>
-            <div id="pageList" class="indexList"></div>
-
-            <div class="indexFooter">
-              <button id="btnDeletePage" class="btn danger" type="button">Eliminar página</button>
-            </div>
-          </div>
-
-          <div class="indexStatus">
-            <span id="saveStatus" class="muted small">—</span>
+          <div class="indexScroll">
+            <!-- JS renderiza aquí: libretas con páginas anidadas -->
+            <ul id="treeRoot" class="tree"></ul>
           </div>
         </aside>
 
-        <!-- DERECHA: EDITOR -->
+        <!-- RIGHT: EDITOR -->
         <section class="editorPanel">
           <textarea id="pageEditor" class="pageEditor" placeholder="Escribe aquí..."></textarea>
         </section>
       </div>
-
     </div>
   </div>
 
-  <script type="module" src="app.js?v=7"></script>
+  <script type="module" src="app.js?v=1"></script>
 </body>
 </html>
