@@ -936,3 +936,317 @@ pageEditor?.addEventListener("input", ()=>{
   if(!activeNotebookId || !activePageId) return;
   scheduleSave();
 });
+
+
+// =========================
+// Focus Tools: Clock/Timer/Alarm/Pomodoro/Music
+// =========================
+const $ = (id) => document.getElementById(id);
+
+const clockTime = $("clockTime");
+const clockSec  = $("clockSec");
+
+const modeTimer = $("modeTimer");
+const modeAlarm = $("modeAlarm");
+const modePomo  = $("modePomo");
+const modeMusic = $("modeMusic");
+const focusPanel = $("focusPanel");
+
+// ---- Clock ----
+function pad2(n){ return String(n).padStart(2,"0"); }
+function tickClock(){
+  const d = new Date();
+  clockTime.textContent = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  clockSec.textContent  = pad2(d.getSeconds());
+}
+setInterval(tickClock, 250);
+tickClock();
+
+// ---- Simple sound (no deps) ----
+let audioCtx = null;
+function beep(ms=200, freq=880){
+  try{
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = "sine";
+    o.frequency.value = freq;
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    g.gain.value = 0.05;
+    o.start();
+    setTimeout(()=>{ o.stop(); }, ms);
+  }catch{}
+}
+
+// ---- Notifications helper ----
+async function ensureNotify(){
+  if (!("Notification" in window)) return false;
+  if (Notification.permission === "granted") return true;
+  if (Notification.permission === "denied") return false;
+  const p = await Notification.requestPermission();
+  return p === "granted";
+}
+function notify(title, body){
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  new Notification(title, { body });
+}
+
+// ---- Mode UI ----
+const MODES = ["timer","alarm","pomo","music"];
+let activeMode = localStorage.getItem("focus.mode") || "timer";
+
+function setActiveMode(m){
+  activeMode = m;
+  localStorage.setItem("focus.mode", m);
+
+  [modeTimer, modeAlarm, modePomo, modeMusic].forEach(a => a?.classList.remove("active"));
+  if (m==="timer") modeTimer?.classList.add("active");
+  if (m==="alarm") modeAlarm?.classList.add("active");
+  if (m==="pomo")  modePomo?.classList.add("active");
+  if (m==="music") modeMusic?.classList.add("active");
+
+  renderPanel();
+}
+
+modeTimer?.addEventListener("click", (e)=>{ e.preventDefault(); setActiveMode("timer"); });
+modeAlarm?.addEventListener("click", (e)=>{ e.preventDefault(); setActiveMode("alarm"); });
+modePomo?.addEventListener("click",  (e)=>{ e.preventDefault(); setActiveMode("pomo"); });
+modeMusic?.addEventListener("click", (e)=>{ e.preventDefault(); setActiveMode("music"); });
+
+// ---- Timer ----
+let timerT = null;
+let timerEnd = null;
+
+function startTimer(minutes){
+  clearInterval(timerT);
+  timerEnd = Date.now() + minutes*60*1000;
+  timerT = setInterval(()=>{
+    const left = Math.max(0, timerEnd - Date.now());
+    updateTimerPill(left);
+    if (left <= 0){
+      clearInterval(timerT);
+      beep(350, 880);
+      ensureNotify().then(()=> notify("Timer terminado", `Listo: ${minutes} min`));
+    }
+  }, 250);
+}
+
+function stopTimer(){
+  clearInterval(timerT);
+  timerT = null;
+  timerEnd = null;
+  updateTimerPill(null);
+}
+
+function updateTimerPill(msLeft){
+  const pill = $("timerPill");
+  if (!pill) return;
+  if (msLeft == null){ pill.textContent = "—"; return; }
+  const s = Math.ceil(msLeft/1000);
+  const mm = Math.floor(s/60);
+  const ss = s%60;
+  pill.textContent = `${pad2(mm)}:${pad2(ss)}`;
+}
+
+// ---- Alarm (simple: today/time) ----
+let alarmT = null;
+let alarmAt = null;
+
+function setAlarm(hhmm){
+  clearInterval(alarmT);
+  const [h,m] = hhmm.split(":").map(Number);
+  const now = new Date();
+  const at = new Date();
+  at.setHours(h, m, 0, 0);
+  if (at <= now) at.setDate(at.getDate()+1); // mañana
+  alarmAt = at.getTime();
+
+  alarmT = setInterval(()=>{
+    const left = alarmAt - Date.now();
+    const pill = $("alarmPill");
+    if (pill){
+      const s = Math.max(0, Math.ceil(left/1000));
+      const hh = Math.floor(s/3600);
+      const mm = Math.floor((s%3600)/60);
+      pill.textContent = `${hh}h ${mm}m`;
+    }
+    if (left <= 0){
+      clearInterval(alarmT);
+      beep(600, 660);
+      ensureNotify().then(()=> notify("⏰ Alarma", `Hora: ${hhmm}`));
+    }
+  }, 500);
+}
+
+function clearAlarm(){
+  clearInterval(alarmT);
+  alarmT = null;
+  alarmAt = null;
+  const pill = $("alarmPill");
+  if (pill) pill.textContent = "—";
+}
+
+// ---- Pomodoro ----
+let pomoT = null;
+let pomoEnd = null;
+let pomoState = localStorage.getItem("pomo.state") || "work"; // work|break
+let pomoWork = Number(localStorage.getItem("pomo.work") || 25);
+let pomoBreak = Number(localStorage.getItem("pomo.break") || 5);
+
+function startPomo(){
+  clearInterval(pomoT);
+  const mins = pomoState === "work" ? pomoWork : pomoBreak;
+  pomoEnd = Date.now() + mins*60*1000;
+
+  pomoT = setInterval(()=>{
+    const left = Math.max(0, pomoEnd - Date.now());
+    updatePomoPill(left);
+    if (left <= 0){
+      clearInterval(pomoT);
+      beep(450, pomoState==="work" ? 520 : 820);
+      ensureNotify().then(()=> notify("Pomodoro", pomoState==="work" ? "Descanso" : "A trabajar"));
+
+      // alterna estado y reinicia si quieres auto-run
+      pomoState = (pomoState === "work") ? "break" : "work";
+      localStorage.setItem("pomo.state", pomoState);
+      renderPanel();
+    }
+  }, 250);
+}
+
+function stopPomo(){
+  clearInterval(pomoT);
+  pomoT = null;
+  pomoEnd = null;
+  updatePomoPill(null);
+}
+
+function updatePomoPill(msLeft){
+  const pill = $("pomoPill");
+  if (!pill) return;
+  if (msLeft == null){ pill.textContent = "—"; return; }
+  const s = Math.ceil(msLeft/1000);
+  const mm = Math.floor(s/60);
+  const ss = s%60;
+  pill.textContent = `${pad2(mm)}:${pad2(ss)}`;
+}
+
+// ---- Music (focus audio): simple noise generator ----
+let noiseNode = null;
+function startNoise(type="brown"){
+  stopNoise();
+  audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+  const bufferSize = 2 * audioCtx.sampleRate;
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const output = noiseBuffer.getChannelData(0);
+
+  let lastOut = 0.0;
+  for (let i=0; i<bufferSize; i++){
+    const white = Math.random()*2 - 1;
+    if (type === "brown"){
+      lastOut = (lastOut + 0.02*white) / 1.02;
+      output[i] = lastOut * 3.5;
+    } else {
+      output[i] = white * 0.15;
+    }
+  }
+
+  const src = audioCtx.createBufferSource();
+  src.buffer = noiseBuffer;
+  src.loop = true;
+
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.06;
+
+  src.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  src.start();
+  noiseNode = { src, gain };
+}
+
+function stopNoise(){
+  try{
+    if (noiseNode?.src) noiseNode.src.stop();
+  }catch{}
+  noiseNode = null;
+}
+
+// ---- Render ----
+function renderPanel(){
+  if (!focusPanel) return;
+
+  if (activeMode === "timer"){
+    focusPanel.innerHTML = `
+      <span class="pill" title="Tiempo restante" id="timerPill">—</span>
+      <input id="timerMin" type="number" min="1" max="240" value="25" aria-label="Minutos" />
+      <a class="action" href="#" id="timerStart">Iniciar</a>
+      <a class="action" href="#" id="timerStop">Parar</a>
+    `;
+    $("timerStart")?.addEventListener("click",(e)=>{ e.preventDefault(); startTimer(Number($("timerMin").value||25)); });
+    $("timerStop")?.addEventListener("click",(e)=>{ e.preventDefault(); stopTimer(); });
+    updateTimerPill(timerEnd ? Math.max(0, timerEnd-Date.now()) : null);
+    return;
+  }
+
+  if (activeMode === "alarm"){
+    focusPanel.innerHTML = `
+      <span class="pill" title="Falta" id="alarmPill">—</span>
+      <input id="alarmTime" type="time" aria-label="Hora alarma" />
+      <a class="action" href="#" id="alarmSet">Programar</a>
+      <a class="action" href="#" id="alarmClear">Quitar</a>
+    `;
+    $("alarmSet")?.addEventListener("click", async (e)=>{
+      e.preventDefault();
+      await ensureNotify();
+      const t = $("alarmTime").value;
+      if (!t) return;
+      setAlarm(t);
+    });
+    $("alarmClear")?.addEventListener("click",(e)=>{ e.preventDefault(); clearAlarm(); });
+    return;
+  }
+
+  if (activeMode === "pomo"){
+    focusPanel.innerHTML = `
+      <span class="pill" id="pomoPill">—</span>
+      <span class="pill">${pomoState === "work" ? "Trabajo" : "Descanso"}</span>
+      <input id="pomoWork" type="number" min="10" max="90" value="${pomoWork}" aria-label="Min trabajo" />
+      <input id="pomoBreak" type="number" min="3" max="30" value="${pomoBreak}" aria-label="Min descanso" />
+      <a class="action" href="#" id="pomoStart">Iniciar</a>
+      <a class="action" href="#" id="pomoStop">Parar</a>
+    `;
+    $("pomoWork")?.addEventListener("change", (e)=>{
+      pomoWork = Number(e.target.value||25);
+      localStorage.setItem("pomo.work", String(pomoWork));
+    });
+    $("pomoBreak")?.addEventListener("change", (e)=>{
+      pomoBreak = Number(e.target.value||5);
+      localStorage.setItem("pomo.break", String(pomoBreak));
+    });
+    $("pomoStart")?.addEventListener("click",(e)=>{ e.preventDefault(); startPomo(); });
+    $("pomoStop")?.addEventListener("click",(e)=>{ e.preventDefault(); stopPomo(); });
+
+    updatePomoPill(pomoEnd ? Math.max(0, pomoEnd-Date.now()) : null);
+    return;
+  }
+
+  if (activeMode === "music"){
+    focusPanel.innerHTML = `
+      <select id="noiseType" aria-label="Tipo">
+        <option value="brown">Brown noise</option>
+        <option value="white">White noise</option>
+      </select>
+      <a class="action" href="#" id="noiseOn">On</a>
+      <a class="action" href="#" id="noiseOff">Off</a>
+      <span class="pill" style="opacity:.75">Sin YouTube, sin distracciones.</span>
+    `;
+    $("noiseOn")?.addEventListener("click",(e)=>{ e.preventDefault(); startNoise($("noiseType").value); });
+    $("noiseOff")?.addEventListener("click",(e)=>{ e.preventDefault(); stopNoise(); });
+    return;
+  }
+}
+
+setActiveMode(activeMode);
