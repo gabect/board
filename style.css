@@ -432,3 +432,79 @@ kbd{
   .modalBody{ grid-template-columns: 1fr; grid-template-rows: 320px 1fr; }
   .indexPanel{ border-right:none; border-bottom: 1px solid var(--line); }
 }
+
+
+.focusbar{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:10px 16px;
+  border-bottom:1px solid var(--line);
+  background: rgba(255,255,255,.02);
+}
+
+.clock{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  min-width:120px;
+}
+#clockTime{ font-weight:700; font-size:1.15rem; }
+#clockSec{ font-size:.95rem; opacity:.7; }
+
+.focusnav{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.focusnav a{
+  color: var(--text);
+  text-decoration:none;
+  padding:6px 8px;
+  border-top:1px solid transparent;
+  border-right:1px solid transparent;
+}
+.focusnav a:hover,
+.focusnav a.active{
+  background: rgba(255,255,255,.03);
+  border-top-color: var(--focus);
+  border-right-color: var(--focus);
+}
+
+.focuspanel{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.focuspanel input, .focuspanel select{
+  min-width:120px;
+  padding:8px 10px;
+  border:none;
+  border-top:1px solid var(--line);
+  border-right:1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+}
+.focuspanel a.action{
+  text-decoration:none;
+  color: var(--text);
+  padding:6px 8px;
+  border-top:1px solid var(--line);
+  border-right:1px solid var(--line);
+}
+.focuspanel a.action:hover{
+  border-top-color: var(--focus);
+  border-right-color: var(--focus);
+  background: rgba(255,255,255,.03);
+}
+
+.pill{
+  padding:6px 10px;
+  border-top:1px solid var(--line);
+  border-right:1px solid var(--line);
+  opacity:.9;
+}
