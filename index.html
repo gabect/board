@@ -15,6 +15,24 @@
       <strong>Private Board</strong>
       <span class="muted">— tu corcho personal</span>
     </div>
+<!-- Focus Bar (ponlo dentro del header o arriba del main) -->
+<div class="focusbar" aria-label="Reloj y enfoque">
+  <div class="clock">
+    <span id="clockTime">--:--</span>
+    <span id="clockSec">--</span>
+  </div>
+
+  <nav class="focusnav" aria-label="Focus">
+    <a href="#" id="modeTimer">Timer</a>
+    <a href="#" id="modeAlarm">Alarma</a>
+    <a href="#" id="modePomo">Pomodoro</a>
+    <a href="#" id="modeMusic">Música</a>
+  </nav>
+
+  <div class="focuspanel" id="focusPanel">
+    <!-- JS renderiza aquí según modo -->
+  </div>
+</div>
 
     <nav class="topActions" aria-label="Acciones">
       <a id="lnkTheme" class="link" href="#">Tema</a>
